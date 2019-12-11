@@ -1,0 +1,12 @@
+# depslib dependency file v1.0
+1575674829 source:/home/yann/Documents/Codeblock/algo navigation/sailboat.cpp
+	"sailboat.h"
+	"math.h"
+
+1575674829 /home/yann/Documents/Codeblock/algo navigation/sailboat.h
+	<string>
+
+1575675139 source:/home/yann/Documents/Codeblock/algo navigation/main.cpp
+	<iostream>
+	"sailboat.h"
+
