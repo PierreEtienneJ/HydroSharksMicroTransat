@@ -39,8 +39,8 @@ int main()
     X.push_back(hydrosharks.x);///recolte des nouvelles coordonnees
     Y.push_back(hydrosharks.y);
 
-    std::cout << hydrosharks.x<< std::endl;///affichage
-    std::cout << hydrosharks.y<< std::endl;
+    std::cout << "x= " << hydrosharks.x << std::endl;///affichage
+    std::cout << "y= " << hydrosharks.y<< std::endl << std::endl;
   }
 
   int N=0;
