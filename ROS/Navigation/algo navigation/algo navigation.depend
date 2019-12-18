@@ -1,12 +1,71 @@
 # depslib dependency file v1.0
-1575674829 source:/home/yann/Documents/Codeblock/algo navigation/sailboat.cpp
+1576189899 source:/home/yann/Documents/Codeblock/algo navigation/sailboat.cpp
 	"sailboat.h"
 	"math.h"
 
-1575674829 /home/yann/Documents/Codeblock/algo navigation/sailboat.h
+1576152467 /home/yann/Documents/Codeblock/algo navigation/sailboat.h
 	<string>
 
-1575675139 source:/home/yann/Documents/Codeblock/algo navigation/main.cpp
+1576684448 source:/home/yann/Documents/Codeblock/algo navigation/main.cpp
 	<iostream>
 	"sailboat.h"
+	"CImg.h"
+	<vector>
+
+1576154633 /home/yann/Documents/Codeblock/algo navigation/CImg.h
+	<cstdio>
+	<cstdlib>
+	<cstdarg>
+	<cstring>
+	<cmath>
+	<cfloat>
+	<climits>
+	<ctime>
+	<exception>
+	<algorithm>
+	<stdio.h>
+	<sys/types.h>
+	<sys/time.h>
+	<sys/stat.h>
+	<unistd.h>
+	<dirent.h>
+	<fnmatch.h>
+	<windows.h>
+	<shlobj.h>
+	<process.h>
+	<io.h>
+	<initializer_list>
+	<utility>
+	<X11/Xlib.h>
+	<X11/Xutil.h>
+	<X11/keysym.h>
+	<pthread.h>
+	<sys/ipc.h>
+	<sys/shm.h>
+	<X11/extensions/XShm.h>
+	<X11/extensions/Xrandr.h>
+	<omp.h>
+	<cstddef>
+	"cv.h"
+	"highgui.h"
+	"png.h"
+	"jpeglib.h"
+	"setjmp.h"
+	"tiffio.h"
+	"minc_io_simple_volume.h"
+	"minc_1_simple.h"
+	"minc_1_simple_rw.h"
+	"zlib.h"
+	"curl/curl.h"
+	"Magick++.h"
+	"fftw3.h"
+	"Board.h"
+	"ImfRgbaFile.h"
+	"ImfInputFile.h"
+	"ImfChannelList.h"
+	"ImfMatrixAttribute.h"
+	"ImfArray.h"
+	"tinyexr.h"
+	"CImg.h"
+	<stdint.h>
 
