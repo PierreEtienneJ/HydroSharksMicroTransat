@@ -32,13 +32,13 @@ int main()
   img.draw_rectangle(0, 0, 1950, 1950, blanc); ///dessin du fond blanc
 
   ///Parcours/////////
-  for (int i=0; i<N;i++)
+  for (int i=1; i<N;i++)
   {
     hydrosharks.suivideligne();
     hydrosharks.avancer();
 
-    X.push_back(hydrosharks.x);///recolte des nouvelles coordonnees
-    Y.push_back(hydrosharks.y);
+    X[i]=hydrosharks.x;///recolte des nouvelles coordonnees
+    Y[i]=hydrosharks.y;
 
     std::cout << "x= " << hydrosharks.x << std::endl;///affichage
     std::cout << "y= " << hydrosharks.y<< std::endl << std::endl;
@@ -46,14 +46,14 @@ int main()
 
   img.draw_line(hydrosharks.ax,hydrosharks.ay,hydrosharks.bx,hydrosharks.by,noir);///dessin de la ligne que le bateau doit suivre
   img.draw_arrow(50,50,50+50*cos(hydrosharks.psi),50+50*sin(hydrosharks.psi),noir,1,30,-60);///fleche du vent
-  
+
   for (int j=0;j<N;j++)
   {
     img.draw_circle(X[j], Y[j], 2, noir);///tracé du trajet du bateau
   }
-  
+
   img.draw_image(100,100,0,0,bateau);///dessin bateau
   img.display();///affichage de l'image
-  
+
   return 0;
 }
