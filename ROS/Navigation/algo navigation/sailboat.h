@@ -15,7 +15,7 @@ void suivideligne();
 
 
 
-double x,y,v,theta,omega; // state variables x,y : position  v : vitesse theta : cap omega : variation de cap
+double x,y,v,theta,omega; // state variables x,y : position ; v : vitesse ; theta : cap ; omega : variation de cap
 double beta, alphag; // parameters beta : coeff dérive alphag : coeff de portance du gouvernail deltag : angle du gouvernail
 double a,psi; // wind a : vitesse  psi : angle
 double dt;  // pas
