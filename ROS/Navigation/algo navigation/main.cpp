@@ -12,8 +12,9 @@ int main()
 {
   Sailboat hydrosharks;  ///Création de 1 bateau
 
-  vector<double> X(1); ///tableau des coordonnées du bateau///
-  vector<double> Y(1);
+  int N=2500; /// Nombre de passage dans la boucle ///
+  vector<double> X(N); ///tableau des coordonnées du bateau///
+  vector<double> Y(N);
 
   ///Initialisation///
 
@@ -31,7 +32,7 @@ int main()
   img.draw_rectangle(0, 0, 1950, 1950, blanc); ///dessin du fond blanc
 
   ///Parcours/////////
-  for (int i=0; i<2500;i++)
+  for (int i=0; i<N;i++)
   {
     hydrosharks.suivideligne();
     hydrosharks.avancer();
@@ -42,9 +43,6 @@ int main()
     std::cout << "x= " << hydrosharks.x << std::endl;///affichage
     std::cout << "y= " << hydrosharks.y<< std::endl << std::endl;
   }
-
-  int N=0;
-  N=X.size(); ///taille du tableau de coordonnees
 
   img.draw_line(hydrosharks.ax,hydrosharks.ay,hydrosharks.bx,hydrosharks.by,noir);///dessin de la ligne que le bateau doit suivre
   img.draw_arrow(50,50,50+50*cos(hydrosharks.psi),50+50*sin(hydrosharks.psi),noir,1,30,-60);///fleche du vent
