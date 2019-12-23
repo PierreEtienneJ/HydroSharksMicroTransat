@@ -6,25 +6,31 @@
 
 class Sailboat
 {
-public :
+    public :
 
-Sailboat();
-void avancer();
-void suivideligne();
+    Sailboat();
+    void avancer();
+    void suivideligne();
 
 
 
-double x,y,v,theta,omega,phiPoint,phi; // state variables x,y : position  v : vitesse theta : cap omega : variation de cap
-double beta,Jz,l,rv, rg,alphag,alphav,alphaf,alphatheta,m,Jx; // parameters beta : coeff dérive alphag : coeff de portance du gouvernail deltag : angle du gouvernail
-double a,psi; // wind a : vitesse  psi : angle
-double dt;  // pas
-double fv,fg,gamma,deltav,deltag,deltavmax;  //link variables deltag : angle de la voile  fg : force de l'eau sur le gouvernail
+    double x,y; ///position
+    double v; ///vitesse
+    double theta,omega; ///cap et variation de cap
+    double phi,phiPoint; /// angle de la ligne et variation de l'angle de la ligne
+    double beta,alphag,alphav,alphaf,alphatheta; ///coeff de dérive, portance du gouvernail, portance de la voile, frottement de trainee, frottement angulaire
+    double l,rv,rg; /// distance entre le centre de poussée de la voile et le mat,  distance du mat a G, distance du gouvernail a G
+    double m; ///masse
+    double Jz, Jx; /// moments d'inertie
+    double a,psi; /// vent a : vitesse  psi : angle
+    double dt;  /// pas
+    double fv,fg,gamma,deltav,deltag,deltavmax;  /// deltag : angle de la voile  fg : force de l'eau sur le gouvernail fv : force du vent sur la voile, deltav  : angle de la voile
 
-double ax,ay,bx,by; ///point A et point B/////
-double e; ///ecart au cap///
-double hv;
+    double ax,ay,bx,by; ///point A et point B/////
+    double e; ///ecart au cap///
+    double hv;
 
-int q;
+    int q;
 };
 
 
