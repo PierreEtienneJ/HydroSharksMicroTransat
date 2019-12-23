@@ -40,6 +40,8 @@ int main()
     X[i]=hydrosharks.x;///recolte des nouvelles coordonnees
     Y[i]=hydrosharks.y;
 
+    std::cout << hydrosharks.q<< std::endl << std::endl;
+     std::cout << hydrosharks.v<< std::endl << std::endl;
     std::cout << "x= " << hydrosharks.x << std::endl;///affichage
     std::cout << "y= " << hydrosharks.y<< std::endl << std::endl;
   }
