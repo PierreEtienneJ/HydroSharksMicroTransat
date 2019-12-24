@@ -14,15 +14,15 @@ class GenData :
         self.stream=np.zeros((nbData, 2)) #courant : spd dir
         self.air=np.zeros((nbData, 3)) # temperature pressure humidity
         self.water=np.zeros((nbData, 2)) # temperature salinity
-        self.time=np.zeros((nbData,1)) #UTC
+        self.time=np.zeros(nbData) #UTC
         self.sun=np.zeros((nbData, 3)) #UV, lux, octa
     
         #output
-        self.speed=np.zeros((nbData, 1))
-        self.drift=np.zeros((nbData, 1)) #dérive
-        self.consuption=np.zeros((nbData, 1)) 
-        self.roll=np.zeros((nbData, 1))
-        self.production=np.zeros((nbData, 1))
+        self.speed=np.zeros(nbData)
+        self.drift=np.zeros(nbData) #dérive
+        self.consuption=np.zeros(nbData) 
+        self.roll=np.zeros(nbData)
+        self.production=np.zeros(nbData)
     
     def generateData(self):
         print('Generate Data...')
@@ -87,25 +87,30 @@ class GenData :
             self.drift[i]=math.atan2(self.stream[i,0]*math.sin(self.stream[i,1]*np.pi/180)+self.speed[i], self.stream[i,0]*math.cos(self.stream[i,1]*np.pi/180))
 
     def __simulateConsuption(self):
-        self.consuption=self.speed+self.wind[:,0]
+        for i in range(self.nbData):
+            self.consuption[i]=self.speed[i]+self.wind[i,0]
     
     def __simulateRoll(self):
-        self.roll= -self.wind[:,1]*3/18
+        for i in range(self.nbData):
+            self.roll[i]= -self.wind[i,1]*3/18
 
     def __simulateProduction(self):
         for i in range(self.nbData):
-            if(self.time[i]<6 and self.time[i]>24-6):
+            if(self.time[i]<6 or self.time[i]>24-6):
                 self.production[i]=0
             else :
                 self.production[i]=2/self.sun[i,2]*self.sun[i,1]/10
 
     def saveCSV(self, nomFichier):
         with open(nomFichier+'.csv','w') as csvfile:
-            csv.writer(csvfile).writerow(('windSpd', 'windDir','swellFreq', 'swellAmpl', 'swellDir', 'streamSpd','streamDir','airT','airP','airH','waterT', 'waterS','time','sunUV','sunLux', 'sunOcta', 'spd','drift','consumption','roll','production'))
+            csv.writer(csvfile).writerow(('windSpd', 'windDir','swellFreq', 'swellAmpl', 'swellDir', 'streamSpd','streamDir','airT','airP','airH','waterT', 'waterS','time','sunUV','sunLux', 'sunOcta', 
+            'spd','drift','consumption','roll','production'))
             for i in range(self.nbData):
                 csv.writer(csvfile).writerow((self.wind[i,0], self.wind[i,1], self.swell[i,0], self.swell[i,1], self.swell[i,2], self.stream[i,0], self.stream[i,1], self.air[i,0], self.air[i,1], self.air[i,2], self.water[i,0], 
-                self.water[i,1], self.time[i], self.sun[i,0], self.sun[i,1], self.sun[i,2], self.speed[i], self.drift[i], self.consuption[i], self.roll[i], self.production[i]))
+                self.water[i,1], self.time[i], self.sun[i,0], self.sun[i,1], self.sun[i,2], 
+                self.speed[i], self.drift[i], self.consuption[i], self.roll[i], self.production[i]))
         print('Saving Data...')
+
 if __name__ == "__main__":
     dataGen=GenData(10000)
     dataGen.generateData()
