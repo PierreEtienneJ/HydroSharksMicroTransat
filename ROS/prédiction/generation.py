@@ -42,8 +42,8 @@ class GenData :
 
             #air
             self.air[i,0]=(25-5)*random.random()+5# temperature en C entre 5 et 25
-            self.air[i,1]=(90-30)*random.random()+30 #humidité entre 30% et 90%
-            self.air[i,2]=10*np.random.randn()+1000 #pression en hPa loi normal centré en 1000 de variance 1
+            self.air[i,2]=(90-30)*random.random()+30 #humidité entre 30% et 90%
+            self.air[i,1]=10*np.random.randn()+1000 #pression en hPa loi normal centré en 1000 de variance 1
 
             #eau
             self.water[i,0]=(15-5)*random.random()+5 # temperature en C entre 5 et 15
@@ -56,7 +56,7 @@ class GenData :
             self.sun[i,2]=int(8*random.random()+1)
 
             if(not -1<self.time[i]-12<1):   #on invente une loi de génération 
-                self.sun[i,0]=1/abs(self.time[i]-12)*(3*random.random()+1)
+                self.sun[i,0]=1/abs(self.time[i]-12)*(4*random.random()+1)
                 self.sun[i,1]=1/abs(self.time[i]-12)*(self.sun[i][2]+1)*(700/8*random.random()+100)
             else :
                 self.sun[i,0]=(3*random.random()+1)
