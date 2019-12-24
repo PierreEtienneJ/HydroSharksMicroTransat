@@ -28,7 +28,7 @@ class GenData :
         print('Generate Data...')
         for i in range(self.nbData):
             ###Vent la direction est aléatoire 
-            self.wind[i,0]=np.random.exponential(scale=1, size=None) # vitesse doit être entre [0,40] qui suit une loi exponentiel, f(x, 1/B)=1/B exp(-x/B) scale=B
+            self.wind[i,0]=np.random.exponential(scale=10, size=None) # vitesse doit être entre [0,40] qui suit une loi exponentiel, f(x, 1/B)=1/B exp(-x/B) scale=B
             self.wind[i,1]=360*random.random()-180 #direction aléatoire
             
             ###houle 
@@ -43,7 +43,7 @@ class GenData :
             #air
             self.air[i,0]=(25-5)*random.random()+5# temperature en C entre 5 et 25
             self.air[i,1]=(90-30)*random.random()+30 #humidité entre 30% et 90%
-            self.air[i,2]=1*np.random.randn()+1000 #pression en hPa loi normal centré en 1000 de variance 1
+            self.air[i,2]=10*np.random.randn()+1000 #pression en hPa loi normal centré en 1000 de variance 1
 
             #eau
             self.water[i,0]=(15-5)*random.random()+5 # temperature en C entre 5 et 15
@@ -57,10 +57,10 @@ class GenData :
 
             if(not -1<self.time[i]-12<1):   #on invente une loi de génération 
                 self.sun[i,0]=1/abs(self.time[i]-12)*(3*random.random()+1)
-                self.sun[i,0]=1/abs(self.time[i]-12)*(self.sun[i][2]+1)*(700/8*random.random()+100)
+                self.sun[i,1]=1/abs(self.time[i]-12)*(self.sun[i][2]+1)*(700/8*random.random()+100)
             else :
                 self.sun[i,0]=(3*random.random()+1)
-                self.sun[i,0]=(self.sun[i,2]+1)*(700/8*random.random()+300)
+                self.sun[i,1]=(self.sun[i,2]+1)*(700/8*random.random()+300)
 
     def simuleOutput(self):
         self.__simuleSpeed()
@@ -99,7 +99,7 @@ class GenData :
             if(self.time[i]<6 or self.time[i]>24-6):
                 self.production[i]=0
             else :
-                self.production[i]=2/self.sun[i,2]*self.sun[i,1]/10
+                self.production[i]=self.sun[i,2]*self.sun[i,1]*self.sun[i,0]*3/100
 
     def saveCSV(self, nomFichier):
         with open(nomFichier+'.csv','w') as csvfile:
