@@ -23,3 +23,5 @@ These two algorythms, are optimized for calculations on GPU.
 
 In order to test prediction's algorythm, we create an algorythm to generate some datas. 
 
+
+
