@@ -1,4 +1,5 @@
 import generation
+import pretreatment
 from data import *
 
 import numpy as np
@@ -6,13 +7,13 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+#I don't know why :) 
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures 
 from sklearn.metrics import mean_squared_error, r2_score
 
 import operator
-
 
 
 class treatment:
@@ -76,6 +77,10 @@ class treatment:
             plt.ylabel(nameCols[1]) 
         plt.show() 
 
+    def neuronalNetwork(self):
+        model=tf.models.Sequential()
+        modelOutput=model.predict()
+        
 
 
 
@@ -131,7 +136,7 @@ class planExp:
 
 
 if __name__ == "__main__":
-    #treat=treatment(importData('simulateGenData.csv'))
+    treat=treatment(importData('simulateGenData.csv'))
     #exp=planExp(importData('simulateGenData.csv'))
     #exp.transform()
     #saveCSV(exp.data, 'planExp.csv')

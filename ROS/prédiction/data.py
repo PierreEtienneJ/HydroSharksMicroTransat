@@ -19,4 +19,8 @@ def saveCSV(data, nomFichier):
             data.to_csv(nomFichier, index = None, header=True)
         except :
             print("data not in pandas ")
+            
 
+
+def pandasToNumPy(data, colonne):
+    return np.array(data[colonne].values)
