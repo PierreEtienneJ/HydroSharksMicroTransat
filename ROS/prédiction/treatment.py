@@ -1,4 +1,5 @@
 import generation
+from data import *
 
 import numpy as np
 import pandas as pd 
@@ -12,19 +13,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 
 import operator
 
-def importData(nomFichier):
-    try :
-        return pd.read_csv(nomFichier, delimiter=',')
-    except :
-        print("no file named "+nomFichier+ " exists")
-        g=input('Do you want generate file ? (y/n)')
-        if(g.upper()=='Y'):
-            dataGen=generation.GenData(10000)
-            dataGen.generateData()
-            dataGen.simuleOutput()
-            dataGen.saveCSV('simulateGenData')
-        else :
-            return None
+
 
 class treatment:
     def __init__(self, data):
@@ -87,6 +76,9 @@ class treatment:
             plt.ylabel(nameCols[1]) 
         plt.show() 
 
+
+
+
 class planExp:
     def __init__(self, data):
         self.data=data
@@ -122,17 +114,16 @@ class planExp:
             self.data['sunOcta'].values[i]=int((self.data['sunOcta'].values[i])/1-1) #par pas de 1
 
         for e in self.col:
-            self.nbParametres.append(int(max(self.data[e].values)-min(self.data[e].values)))
+            self.nbParametres.append(int(max(self.data[e].values)-min(self.data[e].values)+1))
         #print(self.nbParametres)
-
-    def saveCSV(self, nomFichier):
-        self.data.to_csv(nomFichier, index = None, header=True)
+    
 
     def verifPlan(self):
+        print("Starting experience plan verification ")
         for i in range(len(self.col)-1):
             for j in range(i+1, len(self.col)):
-                AB=np.zeros((self.nbParametres[i]+1,self.nbParametres[j]+1))
-                print(self.col[i],self.col[j], self.nbParametres[i]+1,self.nbParametres[j]+1)
+                AB=np.zeros((self.nbParametres[i],self.nbParametres[j]))
+                print(self.col[i],self.col[j], self.nbParametres[i],self.nbParametres[j])
                 for k in range(self.size):
                     x=int(self.data[self.col[i]].values[k])
                     y=int(self.data[self.col[j]].values[k])
@@ -141,10 +132,11 @@ class planExp:
 
 if __name__ == "__main__":
     #treat=treatment(importData('simulateGenData.csv'))
-    exp=planExp(importData('simulateGenData.csv'))
-    exp.transform()
-    exp.saveCSV('planExp.csv')
-    exp.verifPlan()
+    #exp=planExp(importData('simulateGenData.csv'))
+    #exp.transform()
+    #saveCSV(exp.data, 'planExp.csv')
+    #exp.verifPlan()
     #treat.linearRegression()
-    #treat.plot(['spd'])
+    #treat.plot(['windSpd', 'spd'])
+    #treat.plot(['windSpd'])
     #treat.polynomialRegression()

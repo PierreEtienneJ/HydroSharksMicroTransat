@@ -24,43 +24,90 @@ class GenData :
         self.roll=np.zeros(nbData)
         self.production=np.zeros(nbData)
     
-    def generateData(self):
+    def generateData(self, aleatoire):
         print('Generate Data...')
-        for i in range(self.nbData):
-            ###Vent la direction est aléatoire 
-            self.wind[i,0]=np.random.exponential(scale=10, size=None) # vitesse doit être entre [0,40] qui suit une loi exponentiel, f(x, 1/B)=1/B exp(-x/B) scale=B
-            self.wind[i,1]=360*random.random()-180 #direction aléatoire
-            
-            ###houle 
-            self.swell[i,0]=1/((50-1)*random.random()+1) #freq T entre 1s et 50s
-            self.swell[i,1]=10*random.random() #amlitude aléatoire entre [0, 10]
-            self.swell[i,2]=360*random.random()-180 #direction aléatoire
+        print("Chargement :")
+        if(aleatoire==True or aleatoire==1):
+            for i in range(self.nbData):
+                if(100*i/self.nbData%10==0):
+                    print(str(100*i/self.nbData)+"%  ")
 
-            # courant
-            self.stream[i,0]=2*random.random() #vitesse entre [0,2]
-            self.stream[i,1]=360*random.random()-180 #direction aléatoire
+                ###Vent la direction est aléatoire 
+                self.wind[i,0]=np.random.exponential(scale=10, size=None) # vitesse doit être entre [0,40] qui suit une loi exponentiel, f(x, 1/B)=1/B exp(-x/B) scale=B
+                self.wind[i,1]=360*random.random()-180 #direction aléatoire
+                
+                ###houle 
+                self.swell[i,0]=1/((50-1)*random.random()+1) #freq T entre 1s et 50s
+                self.swell[i,1]=10*random.random() #amlitude aléatoire entre [0, 10]
+                self.swell[i,2]=360*random.random()-180 #direction aléatoire
 
-            #air
-            self.air[i,0]=(25-5)*random.random()+5# temperature en C entre 5 et 25
-            self.air[i,2]=(90-30)*random.random()+30 #humidité entre 30% et 90%
-            self.air[i,1]=10*np.random.randn()+1000 #pression en hPa loi normal centré en 1000 de variance 1
+                # courant
+                self.stream[i,0]=2*random.random() #vitesse entre [0,2]
+                self.stream[i,1]=360*random.random()-180 #direction aléatoire
 
-            #eau
-            self.water[i,0]=(15-5)*random.random()+5 # temperature en C entre 5 et 15
-            self.water[i,1]=0.2*np.random.randn()+30 #en PSU g/kg loi normal centré en 30 de variance 0.2
+                #air
+                self.air[i,0]=(25-5)*random.random()+5# temperature en C entre 5 et 25
+                self.air[i,2]=(90-30)*random.random()+30 #humidité entre 30% et 90%
+                self.air[i,1]=10*np.random.randn()+1000 #pression en hPa loi normal centré en 1000 de variance 1
 
-            #time 
-            self.time[i]=24*random.random() #heure entre 0 et 24
+                #eau
+                self.water[i,0]=(15-5)*random.random()+5 # temperature en C entre 5 et 15
+                self.water[i,1]=0.2*np.random.randn()+30 #en PSU g/kg loi normal centré en 30 de variance 0.2
 
-            #soleil
-            self.sun[i,2]=int(8*random.random()+1)
+                #time 
+                self.time[i]=24*random.random() #heure entre 0 et 24
 
-            if(not -1<self.time[i]-12<1):   #on invente une loi de génération 
-                self.sun[i,0]=1/abs(self.time[i]-12)*(4*random.random()+1)
-                self.sun[i,1]=1/abs(self.time[i]-12)*(self.sun[i][2]+1)*(700/8*random.random()+100)
-            else :
-                self.sun[i,0]=(3*random.random()+1)
-                self.sun[i,1]=(self.sun[i,2]+1)*(700/8*random.random()+300)
+                #soleil
+                self.sun[i,2]=int(8*random.random()+1)
+
+                if(not -1<self.time[i]-12<1):   #on invente une loi de génération 
+                    self.sun[i,0]=1/abs(self.time[i]-12)*(4*random.random()+1)
+                    self.sun[i,1]=1/abs(self.time[i]-12)*(self.sun[i][2]+1)*(700/8*random.random()+100)
+                else :
+                    self.sun[i,0]=(3*random.random()+1)
+                    self.sun[i,1]=(self.sun[i,2]+1)*(700/8*random.random()+300)
+        
+        else :
+            #on génère des données en fonction de courbe
+            for i in range(self.nbData):
+                if(100*i/self.nbData%10==0):
+                    print(str(100*i/self.nbData)+"%  ")
+
+                self.time[i]=i%24
+
+                ###Vent
+                self.wind[i,0]=abs(4*np.random.randn()+15)
+                self.wind[i,1]=180*math.sin(i/5)
+
+                 ###houle 
+                self.swell[i,0]=1/((50-1)*random.random()+1) 
+                self.swell[i,1]=5*math.sin(i/2)+5 
+                self.swell[i,2]=180*math.sin(i/5) 
+
+                # courant
+                self.stream[i,0]=2*math.cos(i/10)+1
+                self.stream[i,1]=180*math.sin(-i/5) 
+
+                #air
+                self.air[i,0]=5*math.sin(i/24) + 10
+                self.air[i,2]=30*math.cos(i/24) + 60 #humidité entre 30% et 90%
+                self.air[i,1]=10*np.random.randn()+1000 #pression en hPa loi normal centré en 1000 de variance 1
+
+                #eau
+                self.water[i,0]=5*math.cos(i/200) + 10 #humidité entre 30% et 90%
+                self.water[i,1]=0.1*np.random.randn()+30 #en PSU g/kg loi normal centré en 30 de variance 0.2
+
+                #soleil
+                self.sun[i,2]=int(8*random.random()+1)
+
+                if(not -1<self.time[i]-12<1):   #on invente une loi de génération 
+                    self.sun[i,0]=1/abs(self.time[i]-12)*(4*random.random()+1)
+                    self.sun[i,1]=1/abs(self.time[i]-12)*(self.sun[i][2]+1)*(700/8*random.random()+100)
+                else :
+                    self.sun[i,0]=(3*random.random()+1)
+                    self.sun[i,1]=(self.sun[i,2]+1)*(700/8*random.random()+300)
+
+        print("end generation !")
 
     def simuleOutput(self):
         self.__simuleSpeed()
@@ -72,15 +119,16 @@ class GenData :
     def __simuleSpeed(self):
         for i in range(self.nbData):
             if(self.wind[i][0]<15) :
-                self.speed[i]=4/15*self.wind[i,0]
+                self.speed[i]=1/4*self.wind[i,0]
             else :
-                self.speed[i]=-4/40*self.wind[i,0]+3
-            if(abs(self.wind[i][1])<30):
+                self.speed[i]=-1*self.wind[i,0]+15*(1/4+1)
+                
+            """ if(abs(self.wind[i][1])<30):
                 self.speed[i]*=abs(self.wind[i,1])*1/30
             elif(abs(self.wind[i][1])<180-30):
                 self.speed[i]*=abs(self.wind[i,1])*1/(150)*1.3
             else:
-                self.speed[i]*=abs(self.wind[i,1])*1/180*0.9
+                self.speed[i]*=abs(self.wind[i,1])*1/180*0.9 """
     
     def __simuleDrift(self):
         for i in range(self.nbData):
@@ -113,7 +161,7 @@ class GenData :
 
 if __name__ == "__main__":
     dataGen=GenData(10000)
-    dataGen.generateData()
+    dataGen.generateData(False)
     dataGen.simuleOutput()
     dataGen.saveCSV('simulateGenData')
 
