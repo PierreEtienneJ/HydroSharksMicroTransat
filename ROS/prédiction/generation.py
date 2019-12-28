@@ -160,7 +160,7 @@ class GenData :
         print('Saving Data...')
 
 if __name__ == "__main__":
-    dataGen=GenData(100)
+    dataGen=GenData(10000)
     dataGen.generateData(False)
     dataGen.simuleOutput()
     dataGen.saveCSV('simulateGenData')

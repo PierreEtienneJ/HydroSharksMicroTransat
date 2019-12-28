@@ -2,7 +2,8 @@ import pandas as pd
 import tensorflow as tf 
 import numpy as np
 from data import *
-
+###maybe a problem with python version and pip3 version => 3.6.9, (not 3.8.1) and pip3 => 9.0.1 (et not 19.3)
+#tf just in 3.7 => python3.7 -m pip install ...
 class pretreatment:
     def __init__(self,data, X, Y):
         self.nomColonnes=('windSpd', 'windDir','swellFreq', 'swellAmpl', 'swellDir', 'streamSpd','streamDir','airT','airP','airH','waterT', 'waterS','time','sunUV','sunLux', 'sunOcta', 
@@ -47,12 +48,20 @@ if __name__ == "__main__":
     pre=pretreatment(importData('simulateGenData.csv'), 16,5)
     pre.shape()
     pre.normalize()
-    print(pre.dataXVector[0,:])
+    #print(len(pre.dataYVector[:,0]))
+    #print(len(pre.dataXVector[:,0]))
     #tf
     assert hasattr(tf, "function")
     model=tf.keras.models.Sequential()
-    model.add(tf.keras.layers.Dense(20, activation="relu")) #20 neurones en entrée
-    model.add(tf.keras.layers.Dense(12,activation="relu")) #12 neurones suivant
-    model.add(tf.keras.layers.Dense(1, activation="relu")) # dernier neuroens
-    modelOutput=model.predict(pre.dataXVector[0,:])
-    #print(modelOutput, pre.dataYVector[0,:])
+    #model.add(tf.keras.layers.Dense(32, activation="relu")) #16 neurones en entrée
+    #model.add(tf.keras.layers.Dense(32,activation="relu")) #12 neurones suivant
+    #model.add(tf.keras.layers.Dense(32, activation="relu")) # dernier neuroens
+    #model.compile(loss='sparse_categorical_crossentropy', optimizer='sgd')#, metrics=["accuracy"]) #fct couts, Stokastique gradient descent, //
+    model.add(tf.keras.layers.Dense(units=16, input_shape=[16]))
+    model.add(tf.keras.layers.Dense(units=5, input_shape=[16]))
+    model.compile(optimizer='sgd', loss='mean_squared_error')
+    history=model.fit(pre.dataXVector, pre.dataYVector, epochs=10) #X, Y, nb d'itération
+    print(history)
+    modelOutput=model.predict(pre.dataXVector)
+    model.summary()
+    print(modelOutput, pre.dataYVector)
