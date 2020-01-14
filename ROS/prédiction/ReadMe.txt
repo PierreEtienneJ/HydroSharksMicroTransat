@@ -20,7 +20,6 @@ This code is used to feed the routing algorithm.
 These two algorythms, are optimized for calculations on GPU. 
 
 
-
 In order to test prediction's algorythm, we create an algorythm to generate some datas. 
 
 

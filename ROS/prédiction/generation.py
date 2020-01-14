@@ -6,7 +6,7 @@ import csv
 
 ##le but est de générer des données aléatoires sur lequelles ont peut travailler 
 class GenData :
-    def __init__(self, nbData):
+    def __init__(self, nbData:int):
         self.nbData=nbData
         #imput
         self.wind=np.zeros((nbData, 2)) #vent : spd dir
@@ -24,7 +24,7 @@ class GenData :
         self.roll=np.zeros(nbData)
         self.production=np.zeros(nbData)
     
-    def generateData(self, aleatoire):
+    def generateData(self, aleatoire:bool)->"void":
         print('Generate Data...')
         print("Chargement :")
         if(aleatoire==True or aleatoire==1):

@@ -1,6 +1,7 @@
 import generation
 import pandas as pd 
-def importData(nomFichier):
+
+def importData(nomFichier: str):
     try :
         return pd.read_csv(nomFichier, delimiter=',')
     except :
@@ -20,7 +21,6 @@ def saveCSV(data, nomFichier):
         except :
             print("data not in pandas ")
             
-
 
 def pandasToNumPy(data, colonne):
     return np.array(data[colonne].values)
