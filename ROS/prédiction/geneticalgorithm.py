@@ -39,7 +39,7 @@ class ga :
     def choixCellules(self, j:int, k:int, m:int)->list:
         """prend le numéro de génération (j) et choisi les numéros des k cellules à garder 
         en utilisant la methode m:
-        1 : Sélection par rang (on prend les k meillieurs)
+        1 : Sélection par rang (on prend les k meilleurs)
         2 : Probabilité de sélection proportionnelle à l'adaptation (on en prend k aléatoirement prépondérant a sa fct cout)
         3 : Sélection par tournoi 1vs1 jusqu'a ce qu'il en reste k
         4 : Sélection uniforme
