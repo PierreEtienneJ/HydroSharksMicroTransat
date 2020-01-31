@@ -1,10 +1,9 @@
 #le but de cet algorithme est de trouver le plus cours chemin entre 2 waypoint. 
-import numpy as np 
+import numpy as np
 import random
 import math
 import matplotlib.pyplot as plt
-#import matplotlib.image as mpimg
-class ga :
+class Ga :
     def __init__(self, A:"depart", B:"porte arrive", largeurRoute:float):
         self.nbwaypoints=0                                  #nb de points par cellules
         self.nbCellules=0                                   #nb de cellules de l'algo
@@ -16,7 +15,7 @@ class ga :
         self.Am=A                                           #centre de la route
         self.Bm=[(B[0][0]+B[1][0])/2, (B[0][1]+B[1][1])/2]  
 
-    def fctgeneration(self,nbwaypoints :int, nbCellules:int, nbGenerations:int):
+    def fctgeneration(self,nbwaypoints :int, nbCellules:int, nbGenerations:int, mEvol:int, mChoix:int):
         self.nbwaypoints=nbwaypoints                 
         self.nbCellules=nbCellules
         self.nbGenerations=nbGenerations
@@ -35,7 +34,7 @@ class ga :
 
         for k in range(0, self.nbGenerations-1,2):
             #choix des cellules 
-            c=self.choixCellules(k, self.nbCellules//2+1,2)               
+            c=self.choixCellules(k, self.nbCellules//2+1,mChoix)               
             # on copie les première cellules cela permet de mieux suivre l'évolution
             for j in range(len(c)):                               
                 for i in range(self.nbwaypoints):                                        
@@ -52,7 +51,7 @@ class ga :
             #self.affichegen(k+1)
 
             #EVOLUTION
-            self.evolution(k+1, 1)  #évolution avec une certaine méthode
+            self.evolution(k+1, mEvol)  #évolution avec une certaine méthode
 
             #calcul du cout de chaque cellules
             for j in range(self.nbCellules): 
@@ -72,7 +71,7 @@ class ga :
         if(m==1):#trie sur les indices
             T=[[T[i],i] for i in range(self.nbCellules)] #liste des couts avec indice
             element = lambda T: T[0]
-            T=sorted(T,key=element,reverse=True) #on fait le trie sur la 1er colone de la matrice
+            T=sorted(T,key=element,reverse=False) #on fait le trie sur la 1er colone de la matrice
             indice=[T[i][1] for i in range(len(T))] #on sort les indices
 
             return indice[0:k-1] #on en garde que k
@@ -129,14 +128,17 @@ class ga :
     def evolution(self, igen:int, m:int):
         """igen : numéro de la génération en cours
         m : méthode d'évolution
+        1: translation aléatoire
+        2: fusion cellulaire
         """
-        coef=1
+        coef=0.1
         if(m==1): #on deplace chaque point de [-coef; coef]
             for i in range(self.nbCellules):
                 for j in range(self.nbwaypoints):
                     T=[self.generation[0,j, i, igen], self.generation[1,j, i, igen]] #liste des points
                     T[0]=T[0]+random.random()*2*coef-coef #translation des points
                     T[1]=T[1]+random.random()*2*coef-coef
+
                     self.generation[0,j, i, igen+1]=T[0]      #on crée la génération suivante
                     self.generation[1,j, i, igen+1]=T[1]      #on crée la génération suivante
         elif(m==2): #fuision cellulaire : on prend deux cellules et on mixe certaine cellules dans les deux cellules
@@ -155,9 +157,13 @@ class ga :
 
     def fctCout(self, kCellule:int, igen:int)->float:
             s=0 #longueur du chemin
+            p=self.Am
             for j in range(self.nbwaypoints):
                 w=[self.generation[0,j, kCellule, igen], self.generation[1,j, kCellule, igen]]
-                s+=math.sqrt(w[0]**2+w[1]**2)
+                s+=math.sqrt((w[0]-p[0])**2+(w[1]-p[0])**2)
+                p=w
+            w=self.Bm    
+            s+=math.sqrt((w[0]-p[0])**2+(w[1]-p[0])**2)
             return s
     
     def affiche(self, kCellule:int):
@@ -216,9 +222,10 @@ class ga :
             print("///"+str(j+1)+"//////////////////////////////")
             print(self.generation[0,self.nbwaypoints,j,igen])
         print("##############")
-#def element(T:list)->float: #prend une listet rend le 1er element pour une fct tri -> faire fct lambda
-#    return T[0]
+
 if __name__ == "__main__":
-    ga=ga([10,0], [[0,-1],[0,1]], 5)
-    ga.fctgeneration(5,100,100)
+    carte=np.random.rand(20,20)
+    ga=Ga([10,0], [[0,-1],[0,1]], 5)
+    ga.fctgeneration(10,100,100,2,2)  #2,2 meillieur, plus rapide  100 100 100 #1, 2 pas bon
     ga.affiche(0)
+
