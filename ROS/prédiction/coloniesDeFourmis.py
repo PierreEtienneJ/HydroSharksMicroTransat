@@ -1,50 +1,61 @@
 import numpy as np 
 import time 
-
+import random
+import matplotlib.pyplot as plt
 #algorithme de colonies de fourmis 
 
- 
-
-class Gf: 
+class Cf: 
     def __init__(self, graf:np.array, A:list, B:list): 
         self.graf=graf 
         #initialisation 
-        self.Tmax=0 
         self.A=A #pt coordonnee depart ij 
         self.B=B #pt coordonnee arrive ij 
         self.t0=time.time()
         self.nbfourmis=0 
-        self.nbfourmisE=0 #fourmis elististes 
+        self.nbfourmisE=0 #fourmis elististes ?
+        self.best=[]
 
 
-    def generation(self, Tmax:int,nbfourmis:int, nbfourmisElitiste:int): 
-        self.Tmax=Tmax 
+    def generation(self, T:int,nbfourmis:int, nbfourmisElitiste:int): 
         self.nbfourmis=nbfourmis 
         self.nbfourmisE=nbfourmisElitiste 
 
         self.t0=time.time() 
 
-        while((time.time()-self.t0)<self.Tmax): 
+        for l in range(T): 
             for i in range(self.nbfourmis): 
                 passage=[] #liste des pts de passages de chaque fourmis 
                 passage.append(self.A) 
                 #on choisi une des cases autour 
-                while passage[-1][0] != self.B[0] and passage[-1][1] != self.B[1]: #si on arrive a la fin
-                    passage.append(choixCellule(passage[-1]))
-                
+                #print(passage[-1][0] != self.B[0] or passage[-1][1] != self.B[1])
+                while (passage[-1][0] != self.B[0] or passage[-1][1] != self.B[1]): #si on arrive a la fin
+                    #print(passage[-1], self.B)
+                    try :
+                        passage.append(self.choixCellule(passage[-1],1))
+                    #    print("how ? ")
+                    except:
+                        passage.pop(-1)
+                        passage.append(self.choixCellule(passage[-1],1))
+                    if(passage[-1][0]<0 or passage[-1][1]<0):
+                        passage.pop(-1)
                 self.posePheromones(passage,10)
-            self.evaporation(1)
+                self.best=passage
+                #print("YES", len(passage))
+            self.evaporation(0.01)
 
     def choixCellule(self, T:list, m:int)->list:
         """T : current cellule
         m : methode de choix de cellule
                 1 : la meillieur
                 2 : tirage aléatoire entre les meillieurs"""
-        I=[[T[-1][0]+1,T[-1][1]],[T[-1][0]+1,T[-1][1]+1],[T[-1][0],T[-1][1]+1],
-           [T[-1][0]-1,T[-1][1]+1],[T[-1][0]-1,T[-1][1]],[T[-1][0]-1,T[-1][1]-1],
-           [T[-1][0],T[-1][1]-1],[T[-1][0]+1,T[-1][1]-1]] 
+        #I=[[T[-1][0]+1,T[-1][1]],[T[-1][0]+1,T[-1][1]+1],[T[-1][0],T[-1][1]+1],
+        #   [T[-1][0]-1,T[-1][1]+1],[T[-1][0]-1,T[-1][1]],[T[-1][0]-1,T[-1][1]-1],
+        #   [T[-1][0],T[-1][1]-1],[T[-1][0]+1,T[-1][1]-1]] 
+        
+        Ii=self.graf.voisin
+        I=[[T[0]+Ii[i][0],T[1]+Ii[i][1]] for i in range(8)]
         #I : coordonnées de la case autour 
-        Q=[self.graf[1,I[i][0],I[i][1]] for i in range(8)]
+        Q=[self.graf.CoutVoisin(T,I[i]) for i in range(8)]
         
         if(m==1):
             Q=[[Q[i],i] for i in range(8)] 
@@ -52,8 +63,10 @@ class Gf:
             Q=sorted(Q, key=element) 
             #on prend la case la plus haute en terme de pheromones 
             #si plusieurs cases ont le meme nombre de pheromones 
-            i=1 
-            while(Q[i-1][0]==Q[i][0] or i<len(Q)): 
+            i=1
+            while i<len(Q):
+                if Q[i-1][0]!=Q[i][0]: 
+                    break
                 i+=1
             #on en prend une au hasard 
             Q=[Q[j][1] for j in range(i)] 
@@ -76,38 +89,87 @@ class Gf:
             else:
                 return I[random.randint(0,len(I))]
 
-    def fctCout(self, T): 
-        s=0 
-        for e in T: 
-            s=self.graf[0,e[0],e[1]] 
-        return s 
-
     def posePheromones(self, I:list, p:float)->None:
         """I : liste des points de passage de A à B
         p coef de phéromone"""
-        cout=self.fctCout(I)
+        cout=self.graf.CoutTot(I)
         if(cout<1):
             cout=1
-        for e in I:
-            self.graf[1,e[0],e[1]]+=p/cout
+        for i in range(len(I)-1):
+            self.graf.addCoefVoisin(I[i],I[i+1],p/cout)
     
     def evaporation(self, evap:float):
-        (a,b,c)=self.graf.shape
-        for i in range(b):
-            for j in range(c):
-                self.graf[1,i,j]-=evap
-                if self.graf[1,i,j]<0:
-                    self.graf[1,i,j]=0
+        for i in range(self.graf.size[0]):
+            for j in range(self.graf.size[1]):
+                for e in self.graf.voisin:
+                    self.graf.removeCoefVoisin([i,j],[i+e[0],j+e[1]] ,evap, True)
+
+    def print(self):
+        print(self.best)
+        x=[self.best[i][0] for i in range(len(self.best))]
+        y=[self.best[i][1] for i in range(len(self.best))]
+        plt.plot(y, x)
+        plt.show()
+        
+class Graf:
+    def __init__(self, height :int, widht:int, zero:float=0):
+        self.size=[height, widht]
+        self.graf=np.zeros((height, widht,8,2)) #x,y,cout pour x+i,y+j (i,j)€{-1,0,1}, phéromone ou autre
+                                                #voisin : (i,j+1),(i-1,j+1),(i-1,j), (i-1,j-1), (i,j-1),(i+1,j-1), (i+1,j),(i+1,j+1)
+        self.voisin=[[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1],[1,0],[1,1]]
+        self.zero=zero
+        self.generate()
+    
+    def generate(self):
+        for i in range(self.size[0]):
+            for j in range(self.size[1]):
+                for k in range(8):
+                    self.graf[i,j,k,0]=random.random()
+                    self.graf[i,j,k,1]=self.zero
+    
+    def CoutVoisin(self,A:list, B:list)->float: #B voisin de A
+        C=[A[0]-B[0],A[1]-B[1]]
+        try:
+            return self.graf[A[0],A[1],self.voisin.index(C),0]
+            pass
+        except :
+            return None
+            pass
+        
+
+    def CoutTot(self,A:list)->float: 
+        """A liste des sommets pas lesquel on passe""" 
+        s=0
+        for i in range(len(A)-1):
+            s+=self.CoutVoisin(A[i],A[i+1])
+        return s
+    
+    def addCoefVoisin(self,A:list,B:list,coef:float):
+        C=[A[0]-B[0],A[1]-B[1]]
+        try:
+            self.graf[A[0],A[1],self.voisin.index(C),1]+=coef
+            pass
+        except:
+            pass
+        
+    
+    def removeCoefVoisin(self,A:list,B:list, coef:float, restePositif:bool):
+        C=[A[0]-B[0],A[1]-B[1]]
+        try:
+            self.graf[A[0],A[1],self.voisin.index(C),1]-=coef
+            pass
+        except:
+            pass
+        
+        if(restePositif and self.graf[A[0],A[1],self.voisin.index(C),1]<self.zero):
+            self.graf[A[0],A[1],self.voisin.index(C),1]=self.zero
 
 if __name__ == "__main__":
-    graf=np.random.rand(2,100,100)
-    for i in range(100): 
-        for j in range(100): 
-            graf[1,i,j]=0 
-
-    gf=Gf(graf,[50,0],[50,100]) 
+    graf=Graf(100,100, 1)
+    gf=Cf(graf,[50,0],[50,10]) 
     #le graf est une matrice mn où le premier plan est la piste de phéromone et le deuxième la caratéristique de la route
-    
+    gf.generation(1,1,0)
+    gf.print()
  
 
  

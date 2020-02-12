@@ -32,7 +32,7 @@ class Ga :
         
 
 
-        for k in range(0, self.nbGenerations-1,2):
+        for k in range(0, self.nbGenerations,2):
             #choix des cellules 
             c=self.choixCellules(k, self.nbCellules//2+1,mChoix)               
             # on copie les première cellules cela permet de mieux suivre l'évolution
@@ -161,6 +161,8 @@ class Ga :
             for j in range(self.nbwaypoints):
                 w=[self.generation[0,j, kCellule, igen], self.generation[1,j, kCellule, igen]]
                 s+=math.sqrt((w[0]-p[0])**2+(w[1]-p[0])**2)
+                #if(-5<w[0]<5 and -5<w[1]<5):
+                 #   s+=10
                 p=w
             w=self.Bm    
             s+=math.sqrt((w[0]-p[0])**2+(w[1]-p[0])**2)
@@ -180,19 +182,34 @@ class Ga :
         Xf=[]
         Yf=[]
         for i in range(self.nbwaypoints):
-            Xa.append(self.generation[0,i,0,1])
-            Ya.append(self.generation[1,i,0,1])
-            Xb.append(self.generation[0,i,0,self.nbGenerations//2])
-            Yb.append(self.generation[1,i,0,self.nbGenerations//2])
-            Xc.append(self.generation[0,i,0,self.nbGenerations-1])
-            Yc.append(self.generation[1,i,0,self.nbGenerations-1])
+            Xa.append(self.generation[0,i,0,self.nbGenerations-1])
+            Ya.append(self.generation[1,i,0,self.nbGenerations-1])
+            Xb.append(self.generation[0,i,1,self.nbGenerations-1])
+            Yb.append(self.generation[1,i,1,self.nbGenerations-1])
+            Xc.append(self.generation[0,i,2,self.nbGenerations-1])
+            Yc.append(self.generation[1,i,2,self.nbGenerations-1])
 
-            Xd.append(self.generation[0,i,1,1])
-            Yd.append(self.generation[1,i,1,1])
-            Xe.append(self.generation[0,i,1,self.nbGenerations//2])
-            Ye.append(self.generation[1,i,1,self.nbGenerations//2])
-            Xf.append(self.generation[0,i,1,self.nbGenerations-1])
-            Yf.append(self.generation[1,i,1,self.nbGenerations-1])
+            Xd.append(self.generation[0,i,3,self.nbGenerations-1])
+            Yd.append(self.generation[1,i,3,self.nbGenerations-1])
+            Xe.append(self.generation[0,i,4,self.nbGenerations-1])
+            Ye.append(self.generation[1,i,4,self.nbGenerations-1])
+            Xf.append(self.generation[0,i,5,self.nbGenerations-1])
+            Yf.append(self.generation[1,i,5,self.nbGenerations-1])
+        
+        Xa.append(self.Bm[0])
+        Ya.append(self.Bm[1])
+        Xb.append(self.Bm[0])
+        Yb.append(self.Bm[1])
+        Xc.append(self.Bm[0])
+        Yc.append(self.Bm[1])
+
+        Xd.append(self.Bm[0])
+        Yd.append(self.Bm[1])
+        Xe.append(self.Bm[0])
+        Ye.append(self.Bm[1])
+        Xf.append(self.Bm[0])
+        Yf.append(self.Bm[1])
+        
         print(Xa)
         print(Xb)
         print(Xc)
@@ -205,8 +222,15 @@ class Ga :
         print(self.generation[0,self.nbwaypoints, 1, 1])
         print(self.generation[0,self.nbwaypoints, 1, self.nbGenerations//2])
         print(self.fctCout(1, self.nbGenerations-1))
-        plt.plot(Xa,Ya,'go',Xb,Yb,'g*',Xc,Yc,'g+',Xd,Yd,'ro',Xe,Ye,'r*',Xf,Yf,'r+')
+        plt.plot(Xa,Ya,'g-',Xb,Yb,'b-',Xc,Yc,'r-',Xd,Yd,'y-',Xe,Ye,'m-',Xf,Yf,'w-')
         plt.show()
+        
+        #best=self.resultat()
+        #Xbest=[best[i][0] for i in range(self.nbwaypoints)]
+        #Ybest=[best[i][1] for i in range(self.nbwaypoints)]
+        #plt.plot(Xbest, Ybest)
+        #plt.show()
+        
         X=[]
         for i in range(self.nbCellules):
             Y=[]
@@ -222,10 +246,23 @@ class Ga :
             print("///"+str(j+1)+"//////////////////////////////")
             print(self.generation[0,self.nbwaypoints,j,igen])
         print("##############")
+    
+    def resultat(self):
+        best=self.generation[0,self.nbwaypoints,0,self.nbGenerations-1]
+        i=0
+        for j in range(1,self.nbCellules):
+            if(best>self.generation[0,self.nbwaypoints,j,-1]):
+                i=j
+                best=self.generation[0,self.nbwaypoints,j,-1]
+        retour=[]
+        for k in range(self.nbwaypoints):
+            retour.append([self.generation[0,k,i,-1], self.generation[1,k,i,-1]])
+        return retour
 
 if __name__ == "__main__":
-    carte=np.random.rand(20,20)
-    ga=Ga([10,0], [[0,-1],[0,1]], 5)
+    #carte=np.random.rand(100,100)
+    ga=Ga([10,0], [[10,9],[10,11]], 5)
     ga.fctgeneration(10,100,100,2,2)  #2,2 meillieur, plus rapide  100 100 100 #1, 2 pas bon
     ga.affiche(0)
+
 
