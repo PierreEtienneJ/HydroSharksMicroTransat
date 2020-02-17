@@ -1,8 +1,10 @@
-import numpy as np 
-import time 
+import numpy as np
 import random
 import matplotlib.pyplot as plt
+import graf
 #algorithme de colonies de fourmis 
+#comme le nom l'indique, le but est d'imiter le comportement d'une colonie de formis.Les fourmis se déplacent 
+#sur la graf et laisse une quantité de phéromone sur le chemin inversement propotionel au cout du chemin. 
 
 class Cf: 
     def __init__(self, graf:np.array, A:list, B:list): 
@@ -10,18 +12,11 @@ class Cf:
         #initialisation 
         self.A=A #pt coordonnee depart ij 
         self.B=B #pt coordonnee arrive ij 
-        self.t0=time.time()
-        self.nbfourmis=0 
-        self.nbfourmisE=0 #fourmis elististes ?
+        self.nbfourmis=0
         self.best=[]
 
-
-    def generation(self, T:int,nbfourmis:int, nbfourmisElitiste:int): 
-        self.nbfourmis=nbfourmis 
-        self.nbfourmisE=nbfourmisElitiste 
-
-        self.t0=time.time() 
-
+    def generation(self, T:int,nbfourmis:int): 
+        self.nbfourmis=nbfourmis
         for l in range(T): 
             for i in range(self.nbfourmis): 
                 passage=[] #liste des pts de passages de chaque fourmis 
@@ -111,61 +106,8 @@ class Cf:
         plt.plot(y, x)
         plt.show()
         
-class Graf:
-    def __init__(self, height :int, widht:int, zero:float=0):
-        self.size=[height, widht]
-        self.graf=np.zeros((height, widht,8,2)) #x,y,cout pour x+i,y+j (i,j)€{-1,0,1}, phéromone ou autre
-                                                #voisin : (i,j+1),(i-1,j+1),(i-1,j), (i-1,j-1), (i,j-1),(i+1,j-1), (i+1,j),(i+1,j+1)
-        self.voisin=[[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1],[1,0],[1,1]]
-        self.zero=zero
-        self.generate()
-    
-    def generate(self):
-        for i in range(self.size[0]):
-            for j in range(self.size[1]):
-                for k in range(8):
-                    self.graf[i,j,k,0]=random.random()
-                    self.graf[i,j,k,1]=self.zero
-    
-    def CoutVoisin(self,A:list, B:list)->float: #B voisin de A
-        C=[A[0]-B[0],A[1]-B[1]]
-        try:
-            return self.graf[A[0],A[1],self.voisin.index(C),0]
-            pass
-        except :
-            return None
-            pass
-        
-
-    def CoutTot(self,A:list)->float: 
-        """A liste des sommets pas lesquel on passe""" 
-        s=0
-        for i in range(len(A)-1):
-            s+=self.CoutVoisin(A[i],A[i+1])
-        return s
-    
-    def addCoefVoisin(self,A:list,B:list,coef:float):
-        C=[A[0]-B[0],A[1]-B[1]]
-        try:
-            self.graf[A[0],A[1],self.voisin.index(C),1]+=coef
-            pass
-        except:
-            pass
-        
-    
-    def removeCoefVoisin(self,A:list,B:list, coef:float, restePositif:bool):
-        C=[A[0]-B[0],A[1]-B[1]]
-        try:
-            self.graf[A[0],A[1],self.voisin.index(C),1]-=coef
-            pass
-        except:
-            pass
-        
-        if(restePositif and self.graf[A[0],A[1],self.voisin.index(C),1]<self.zero):
-            self.graf[A[0],A[1],self.voisin.index(C),1]=self.zero
-
 if __name__ == "__main__":
-    graf=Graf(100,100, 1)
+    graf=graf.Graf(100,100, 1)
     gf=Cf(graf,[50,0],[50,10]) 
     #le graf est une matrice mn où le premier plan est la piste de phéromone et le deuxième la caratéristique de la route
     gf.generation(1,1,0)

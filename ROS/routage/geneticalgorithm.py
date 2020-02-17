@@ -3,8 +3,9 @@ import numpy as np
 import random
 import math
 import matplotlib.pyplot as plt
+
 class Ga :
-    def __init__(self, A:"depart", B:"porte arrive", largeurRoute:float):
+    def __init__(self, A:"depart", B:"porte arrivee", largeurRoute:float):
         self.nbwaypoints=0                                  #nb de points par cellules
         self.nbCellules=0                                   #nb de cellules de l'algo
         self.nbGenerations=0                                #nb de génération
@@ -262,7 +263,7 @@ class Ga :
 if __name__ == "__main__":
     #carte=np.random.rand(100,100)
     ga=Ga([10,0], [[10,9],[10,11]], 5)
-    ga.fctgeneration(10,100,100,2,2)  #2,2 meillieur, plus rapide  100 100 100 #1, 2 pas bon
+    ga.fctgeneration(10,100,100,2,4)  #2,2 meillieur, plus rapide  100 100 100 #1, 2 pas bon
     ga.affiche(0)
 
 

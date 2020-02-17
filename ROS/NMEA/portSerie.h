@@ -2,6 +2,9 @@
 #define PORTSERIE_H
 #include <string>
 #include "buffer.h"
+#include <SerialPort.h>
+#include <SerialStream.h>
+using namespace LibSerial ;
 
 class PortSerie{
     private:
@@ -15,12 +18,18 @@ class PortSerie{
                 e_ErrCom_Reception,		// Erreur lors de la réception
                 e_ErrCom_Definition_Trame,	// Erreur de définition de la trame
                 e_ErrCom_Nack,	// Demande non prise en coompte
-                e_ErrCom_Checksum		// Erreur de checksum
+                e_ErrCom_Checksum,		// Erreur de checksum
+                e_ErrCom_Baudrate //erreur dans la définition du baudrate
             } e_ErrCom;
     protected:
         int baudrate;
         std::string port;
-        
+        int nbBits;
+        int parite;
+        char stopBit;
+        SerialPort *my_serial_port;
+        //SerialStream my_serial_stream;
+
     public:
         PortSerie(int baudrate, std::string port, int nbBits, int parite, char stopBit);
         ~PortSerie();
