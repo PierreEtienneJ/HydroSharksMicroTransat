@@ -6,13 +6,14 @@
 #include <SerialStream.h>
 using namespace LibSerial;
 
-PortSerie::PortSerie(int baudrate, std::string port, int nbBits, int parite, char stopBit){
+PortSerie::PortSerie(int baudrate, std::string port, int nbBits, int parite, char stopBit, Buffer *buffer){
     this->baudrate=baudrate;
     this->port=port;
     this->nbBits=nbBits;
     this->parite=parite;
     this->stopBit=stopBit;
     this->my_serial_port=new SerialPort(this->port);
+    this->buffer=buffer;
 }
 PortSerie::~PortSerie(){
     this->my_serial_port->Close();
@@ -97,22 +98,17 @@ void PortSerie::open(){
             break;
     }
 }
-    //if good
-    //throw this->e_ErrCom_None;
-    //else
-    //autre throw
+
 
 void PortSerie::close(){
-    //if good
-    throw this->e_ErrCom_None;
-    //else 
-    //autre throw 
+    this->my_serial_port->Close();
 }
+
 void PortSerie::read(Buffer *buffer, unsigned int lenMax){
-    //if good
+    SerialPort::DataBuffer buff(50);
+    this->my_serial_port->Read(buff,50);
     throw this->e_ErrCom_None;
-    //else 
-    //autre throw 
+
 }
 std::string PortSerie::read(unsigned int lenMax){
     //if good

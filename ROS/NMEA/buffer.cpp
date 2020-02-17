@@ -1,7 +1,7 @@
 #include "buffer.h"
 Buffer::Buffer(int length){
     this->length=length;
-    this->buffer=new std::string[length];
+    this->buffer=new char[length];
     this->head=0;
     this->queue=0;
 }
@@ -9,7 +9,7 @@ Buffer::~Buffer(){
     delete buffer;
 }
 
-bool Buffer::addString(std::string msg){
+bool Buffer::addString(char msg){
     if(this->remaningSize>0){
         this->buffer[this->head++]=msg;
         if(this->head >= this->length)
@@ -18,8 +18,8 @@ bool Buffer::addString(std::string msg){
     }
     return false;
 }
-std::string Buffer::popString(){
-    std::string msg=this->buffer[this->queue++];
+char Buffer::popelem(){
+    char msg=this->buffer[this->queue++];
     if(this->queue>=this->length)
         this->queue=0;
     return msg;

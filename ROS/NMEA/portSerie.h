@@ -29,9 +29,10 @@ class PortSerie{
         char stopBit;
         SerialPort *my_serial_port;
         //SerialStream my_serial_stream;
+        Buffer *buffer;
 
     public:
-        PortSerie(int baudrate, std::string port, int nbBits, int parite, char stopBit);
+        PortSerie(int baudrate, std::string port, int nbBits, int parite, char stopBit, Buffer *buffer);
         ~PortSerie();
 
         void open();
