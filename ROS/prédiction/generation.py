@@ -58,11 +58,11 @@ class GenData :
                 self.time[i]=24*random.random() #heure entre 0 et 24
 
                 #soleil
-                self.sun[i,2]=int(8*random.random()+1)
+                self.sun[i,2]=int(8*random.random()+1) #octa
 
                 if(not -1<self.time[i]-12<1):   #on invente une loi de génération 
-                    self.sun[i,0]=1/abs(self.time[i]-12)*(4*random.random()+1)
-                    self.sun[i,1]=1/abs(self.time[i]-12)*(self.sun[i][2]+1)*(700/8*random.random()+100)
+                    self.sun[i,0]=1/abs(self.time[i]-12)*(4*random.random()+1)  #UV
+                    self.sun[i,1]=1/abs(self.time[i]-12)*(self.sun[i][2]+1)*(700/8*random.random()+100) #lux
                 else :
                     self.sun[i,0]=(3*random.random()+1)
                     self.sun[i,1]=(self.sun[i,2]+1)*(700/8*random.random()+300)
@@ -108,7 +108,7 @@ class GenData :
                     self.sun[i,1]=(self.sun[i,2]+1)*(700/8*random.random()+300)
 
         print("end generation !")
-
+    
     def simuleOutput(self):
         self.__simuleSpeed()
         self.__simuleDrift()
