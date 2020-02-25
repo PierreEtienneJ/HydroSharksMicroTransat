@@ -195,7 +195,7 @@ class TrameNMEA{
         std::string *message;
 
         TrameNMEA::TrameNMEA(TrameNMEA::iDrecepteur idrecepteur, TrameNMEA::iDtrame idtrame, std::string *message);
-        //TrameNMEA::TrameNMEA(void);
+        TrameNMEA::TrameNMEA(void);
 
 
 };

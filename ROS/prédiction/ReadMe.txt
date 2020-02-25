@@ -24,3 +24,4 @@ In order to test prediction's algorythm, we create an algorythm to generate some
 
 
 
+1+1+10+20*1.3=38

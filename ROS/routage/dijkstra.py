@@ -38,9 +38,8 @@ class Dijkstra:
             chemin.append(V)
         return chemin
     
-    def minIn(self, T, reves=False:bool)->list: #rend l'indice minimum 
+    def minIn(self, T, reves=False)->list: #rend l'indice minimum 
         T=[[self.graf.getCoefSommet(T[i]),T[i]] for i in range(len(T))] #liste des couts avec indice
         element = lambda T: T[0]
         T=sorted(T,key=element,reverse=reves) #on fait le trie sur la 1er colone de la matrice
         return T[0]
-    

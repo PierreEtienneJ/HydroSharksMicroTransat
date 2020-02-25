@@ -58,7 +58,6 @@ class Ga :
             for j in range(self.nbCellules): 
                 self.generation[0,self.nbwaypoints,j,k+1]=self.fctCout(j, k+1)   #calcul du cout
             
-
     def choixCellules(self, j:int, k:int, m:int)->list:
         """prend le numéro de génération (j) et choisi les numéros des k cellules à garder 
         en utilisant la methode m:
@@ -105,7 +104,6 @@ class Ga :
 
         else:  
             return random.choices([i for i in range(self.nbCellules)],k=k) #choix alléatoire
-
 
     def tirageCoordonnee(self)->"list float":
         """comme le tirage doit rester dans la route, on choisi une distance sur l'axe, puis un ecartement par rapport a la route,
@@ -155,7 +153,6 @@ class Ga :
                         self.generation[1,j, i, igen+1]=K[1]
                         self.generation[1,j, i+1, igen+1]=L[1]
             
-
     def fctCout(self, kCellule:int, igen:int)->float:
             s=0 #longueur du chemin
             p=self.Am
@@ -170,18 +167,18 @@ class Ga :
             return s
     
     def affiche(self, kCellule:int):
-        Xa=[]
-        Ya=[]
-        Xb=[]
-        Yb=[]
-        Xc=[]
-        Yc=[]
-        Xd=[]
-        Yd=[]
-        Xe=[]
-        Ye=[]
-        Xf=[]
-        Yf=[]
+        Xa=[self.Am[0]]
+        Ya=[self.Am[1]]
+        Xb=[self.Am[0]]
+        Yb=[self.Am[1]]
+        Xc=[self.Am[0]]
+        Yc=[self.Am[1]]
+        Xd=[self.Am[0]]
+        Yd=[self.Am[1]]
+        Xe=[self.Am[0]]
+        Ye=[self.Am[1]]
+        Xf=[self.Am[0]]
+        Yf=[self.Am[1]]
         for i in range(self.nbwaypoints):
             Xa.append(self.generation[0,i,0,self.nbGenerations-1])
             Ya.append(self.generation[1,i,0,self.nbGenerations-1])
@@ -262,8 +259,8 @@ class Ga :
 
 if __name__ == "__main__":
     #carte=np.random.rand(100,100)
-    ga=Ga([10,0], [[10,9],[10,11]], 5)
-    ga.fctgeneration(10,100,100,2,4)  #2,2 meillieur, plus rapide  100 100 100 #1, 2 pas bon
+    ga=Ga([0,0], [[100,9],[100,11]], 5)
+    ga.fctgeneration(10,100,100,2,3)  #2,2 meillieur, plus rapide  100 100 100 #1, 2 pas bon
     ga.affiche(0)
 
 

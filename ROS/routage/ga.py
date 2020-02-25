@@ -233,19 +233,29 @@ class Ga :
         return r
         
 if __name__ == "__main__":
-    ga=Ga([0,0], [[0, 9], [0,11]], 1)
+    ga=Ga([0,0], [[0, 1000], [0,1100]], 1)
     type(ga)
-    ga.gen(100, 100, 1,1)
+    ga.gen(100, 1, 1,1)
     print(ga.nbwaypoints)
     print(ga.nbGenerations)
     r=ga.R1ToR0List(ga.resultat())
     rx=[r[i][0] for i in range(ga.nbwaypoints)]
     ry=[r[i][1] for i in range(ga.nbwaypoints)]
-    plt.plot(rx, ry, "r", [ga.A[0], ga.Bm[0]], [ga.A[1], ga.Bm[1]], "b")
-    plt.show()
+    #plt.plot(rx, ry, "r", [ga.A[0], ga.Bm[0]], [ga.A[1], ga.Bm[1]], "b")
+    #plt.show()
     print(len(ga.BestCout))
-    plt.plot([i for i in range(len(ga.BestCout))], ga.BestCout, "r")
-    plt.show()
-    plt.plot([i for i in range(len(ga.listDistance))], ga.listDistance, "r")
+    #plt.plot([i for i in range(len(ga.BestCout))], ga.BestCout, "r")
+    #plt.show()
+    #plt.plot([i for i in range(len(ga.listDistance))], ga.listDistance, "r")
+    #plt.show()
+    #A=[ga.listDistance[i]-ga.listDistance[i-1] for i in range(1, len(ga.listDistance))]
+    A=[math.log(i) for i in range(1, 100)]
+    B=[0]
+    for i in range(1, len(A)):
+        B.append(B[-1]+A[i])
+    C=[2*i-5 for i in range(1,11)]
+    plt.plot([i for i in range(1,len(A)+1)], A, "r")
+    plt.plot([i for i in range(1,len(B)+1)], B, "b")
+    plt.plot([i for i in range(1,11)], C, "g")
     plt.show()
     pass

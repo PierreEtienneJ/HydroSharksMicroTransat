@@ -37,6 +37,7 @@ TrameNMEA NMEA::getMessage(void){
                 this->dState=this->decodeState::payload;
                 break;
             default:
+            
                 break;
         }
     }
