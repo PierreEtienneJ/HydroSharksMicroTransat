@@ -220,7 +220,7 @@ class Ga :
         print(self.generation[0,self.nbwaypoints, 1, 1])
         print(self.generation[0,self.nbwaypoints, 1, self.nbGenerations//2])
         print(self.fctCout(1, self.nbGenerations-1))
-        plt.plot(Xa,Ya,'g-',Xb,Yb,'b-',Xc,Yc,'r-',Xd,Yd,'y-',Xe,Ye,'m-',Xf,Yf,'w-')
+        plt.plot(Xa,Ya,'g*')#,Xb,Yb,'b*',Xc,Yc,'r-',Xd,Yd,'y-',Xe,Ye,'m-',Xf,Yf,'w*')
         plt.show()
         
         #best=self.resultat()
@@ -260,7 +260,7 @@ class Ga :
 if __name__ == "__main__":
     #carte=np.random.rand(100,100)
     ga=Ga([0,0], [[100,9],[100,11]], 5)
-    ga.fctgeneration(10,100,100,2,3)  #2,2 meillieur, plus rapide  100 100 100 #1, 2 pas bon
+    ga.fctgeneration(10,100,100,2,2)  #2,2 meillieur, plus rapide  100 100 100 #1, 2 pas bon
     ga.affiche(0)
 
 
