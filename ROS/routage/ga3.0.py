@@ -111,28 +111,28 @@ class CalculCout(threading.Thread):
             
             if(Vf<=0):
                 t=1000
-                sys.stdout.write("vent de face \n")
-                sys.stdout.flush()
+               #sys.stdout.write("vent de face \n")
+                #sys.stdout.flush()
             else:
                 t=(distanceAB/1852)/Vf
-                sys.stdout.write("vitesse bateau "+str(Vf)+ " distanceAB="+str(distanceAB/1852)+"kns \n")
-                sys.stdout.flush()
+                #sys.stdout.write("vitesse bateau "+str(Vf)+ " distanceAB="+str(distanceAB/1852)+"kns \n")
+                #sys.stdout.flush()
             uv=self.carte.uv(A,int(temps))
             #energie
             [conso, prod]=e(Vspd, uv) #en Wh
             conso*=t
             prod*=t
             energie+=prod-conso
-            sys.stdout.write("prod "+str(prod)+ " conso="+str(conso)+"\n")
-            sys.stdout.flush()
+            #sys.stdout.write("prod "+str(prod)+ " conso="+str(conso)+"\n")
+            #sys.stdout.flush()
             temps+=t
             
         batterie=100
         a=-1 #<0 !!
         c=10 #>0 !!
         self.resultat[k]=(a*energie**2+c)*(100-batterie)+temps*batterie
-        sys.stdout.write("cout "+str(self.resultat[k])+" e "+str(energie)+" t "+str(temps)+"\n")
-        sys.stdout.flush()
+        #sys.stdout.write("cout "+str(self.resultat[k])+" e "+str(energie)+" t "+str(temps)+"\n")
+        #sys.stdout.flush()
     def run(self):
         for k in range(len(self.cellules)):
             self.fctCout(k)
@@ -140,10 +140,25 @@ class CalculCout(threading.Thread):
     def getResultat(self):
         return self.resultat
 
+class StopGA(threading.Thread):
+    def __init__(self, tarret:float):
+        threading.Thread.__init__(self)
+        self.verrou=False
+        self.time=0
+        self.tmax=tarret
+    def run(self):
+        t0=time.time()
+        while(not self.verrou):
+            time.sleep(0.1)
+            self.time=time.time()-t0
+            if(self.time>self.tmax):
+                self.verrou=True
 
-class Ga :
-    def __init__(self, C:"depart reel", A:"depart th", B:"porte arrivee", largeurRoute:float,carte:map.Map):
+class Ga(threading.Thread):
+    def __init__(self, C:"depart reel", A:"depart th", B:"porte arrivee", largeurRoute:float, stopGa:StopGA):
         """A,B,C en lat/long"""
+        threading.Thread.__init__(self)
+        
         self.nbwaypoints=None                                  #nb de points par cellules
         self.nbCellules=None                                   #nb de cellules de l'algo
         self.nbGenerations=None                                #nb de génération
@@ -168,10 +183,14 @@ class Ga :
         self.BestCout=[]
         self.meanCout=[]
         
-        self.map=carte
+        self.map=[]
+        self.H=None
+        self.pas=None
         
         self.setNbWaypoint()   #nb de waypoint générer pour tracer la route      
-    
+        self.setMap(1852, 1)
+        
+        self.stopGa=stopGa
     def gen(self,nbCellules:int, nbGenerations:int, mEvol:int, mChoix:int):
         #self.setNbWaypoint()   #nb de waypoint générer pour tracer la route                
         self.nbCellules=nbCellules
@@ -190,7 +209,7 @@ class Ga :
             self.generation[self.nbwaypoints-1,k]=random.random()*largeurporte-largeurporte/2
             #le dernier waypoint
             
-            self.fctCout(k,1) #la dernière case est le cout    
+            self.fctCout(k,2) #la dernière case est le cout    
         element = lambda T: T[0]
         T=[[self.generation[self.nbwaypoints,i],i]  for i in range(self.nbCellules)]
         T=sorted(T,key=element,reverse=False) #on fait le trie sur le cout des cellules
@@ -265,10 +284,10 @@ class Ga :
                 #self.evolution(1)
                 
             #calcul du cout de chaque cellules
-            if(False):
+            if(True):
                 #avan
                 for j in range(self.nbCellules): 
-                    self.fctCout(j,1)             #mise à jour du cout
+                    self.fctCout(j,2)             #mise à jour du cout
                 #660s 
             else:
                 #après
@@ -281,7 +300,7 @@ class Ga :
                     for k in range(self.nbCellules//nbThread*m, self.nbCellules//nbThread*(m+1)):
                         y=[]
                         for l in range(self.nbwaypoints):
-                            y.append(self.R1ToR0(self.generation[l][k], l, True))
+                            y.append(self.R1ToR0(self.generation[l,k], l, True)) ##avant : y.append(self.R1ToR0(self.generation[l][k], l, True)) ???
                         c.append(y)
                     Thread.append(CalculCout(c, self.map))
 
@@ -305,6 +324,67 @@ class Ga :
             self.BestCout.append(T[0][0])
             self.meanCout.append(statistics.mean([T[i][0] for i in range(len(T))]))
 
+            
+            ####break dans les cas suivant :
+            ##si les génrations stagent :
+            suiteGen=5
+            ecartStop=5/100 #%
+            if(k>=suiteGen): #on laisse les gen se faire
+                ecartk=(self.BestCout[k-suiteGen]-self.BestCout[k])/self.BestCout[k]
+                if(ecartk<ecartStop):
+                    print("fin gen : stagnation")
+                    break
+            
+            ##element extrene 
+            if(self.stopGa.verrou):
+                print("fin gen : externe")
+                break
+            
+    def run(self):
+        self.gen(30, 30, 3,1)
+    
+    def setMap(self, pas2D:float, time:int):
+        self.pas=pas2D
+        self.H=time
+        
+        #la carte est adapté au ligne de waypoints
+        #chaque colonne de la map est un segment de waypoints
+        self.map=[[map.Case(self.R1ToR0(j, i), self.H) for j in range(-int(self.largeurRoute//self.pas), int(self.largeurRoute//self.pas)+1)] for i in range(self.nbwaypoints-1)]
+        distanceB1B2=map.distanceGPS(self.B[0],self.B[1])
+        self.map.append([map.Case(self.R1ToR0(j, self.nbwaypoints), self.H) for j in range(-int(distanceB1B2/2//self.pas), int(distanceB1B2/2//self.pas))])
+        
+        
+    def R1ToMap(self, d:float, r:int):
+        r=[r, int(d//self.pas+self.largeurRoute//self.pas)]
+        if(0<=r[0]< len(self.map)):
+            if(not 0<=r[1]<len(self.map[r[0]])):
+                print("pb J:", r, [len(self.map), len(self.map[r[0]])])
+        else:
+            print("pb I:", r, [len(self.map), len(self.map[r[0]])])
+        return r
+    
+    def vent(self, d:float, r:int, h:int):
+        [i,j]=self.R1ToMap(d,r)
+        if(0<=i<=self.nbwaypoints):
+            if(0<=j<len(self.map[i])):
+                return self.map[i][j].vent(h)
+    
+    def uv(self, d:float, r:int, h:int):
+        [i,j]=self.R1ToMap(d,r)
+        if(0<=i<=self.nbwaypoints):
+            if(0<=j<len(self.map[i])):
+                return self.map[i][j].uv(h)
+    
+    def courant(self, d:float, r:int, h:int):
+        [i,j]=self.R1ToMap(d,r)
+        if(0<=i<=self.nbwaypoints):
+            if(0<=j<len(self.map[i])):
+                return self.map[i][j].courant(h)
+            else:
+                print("error i,j")
+        else:
+            print("error i,j")
+    
     def setNbWaypoint(self)->"void":
         """Cela permet de set automatiquement le nb de waypoint. La distance en projection sur x1 entre 
         deux waypoints est une fonction croissante (type ln)
@@ -362,9 +442,10 @@ class Ga :
                 return map.gpsToXY(self.A, P)
             
         else:
-            print("error waypoint inconnu")
+            print("error waypoint inconnu : distance", r, "nbW", d)
+            print("info ga : nbW:", self.nbwaypoints, "largeur route", self.largeurRoute)
 
-    def fctCout(self, k:int, coef:int=0):
+    def fctCout(self, k:int, coef:int=2):
         if(coef==0): #distance
             """k : indice de la cellule"""
             s=0 #longueur du chemin
@@ -385,7 +466,7 @@ class Ga :
                 cap=math.atan2(y, x)*180/math.pi            #cap de p à w
                 #print(k,l,t)
                 h=int(t)
-                [i,j]=self.map.R0ToMap(w, True)             #on cherche les coo de la case et on agrandi la map si elle est trop petite
+                [i,j]=self.R0ToMap(w, True)             #on cherche les coo de la case et on agrandi la map si elle est trop petite
                 #print("i,j", i,j, "map", self.map.n, self.map.m)
                 #print("diff",map.decimauxToSexagesimaux2(self.map.map[i][j].coordonnee), "#", map.decimauxToSexagesimaux2(w))
                 Vreel=self.map.map[i][j].vent(h) #vent reel     #on génère les paramètres météo de la case
@@ -407,6 +488,75 @@ class Ga :
                 t+=Tpw
                 p=w
             self.generation[self.nbwaypoints, k]=t #temps de trajet entre A et B
+
+        elif(coef==2):
+                #temps de la cellules k 
+            #Rv : route vrai (route fond)
+            #Rs : route surface
+            #Cv: cap vrai 
+            #d : dérive du au courant
+            a=[self.generation[0,k], 0]
+            temps=0   #en h
+            energie=0 #différence production/conso en W 
+            for i in range(1, self.nbwaypoints): 
+                b=[self.generation[i,k], i]
+                ###distance AB
+                #print("dans cout : a", a, "b", b) 
+                A=self.R1ToR0(a[0], a[1], True)
+                B=self.R1ToR0(b[0], b[1], True)
+                distanceAB=map.distanceGPS(A,B)
+                ##vitesse AB
+                #vent reel AB    
+                [Vspd, Vdir]=self.vent(a[0], a[1], int(temps))
+                #courant AB
+                [Cspd, Cdir]=self.courant(a[0], a[1], int(temps))
+                
+                #vent apparent 
+                #on suppose que seul Vdir est impacté 
+                [x,y]=map.gpsToXY(A,B)                          #on génère les x,y de A p/r à B
+                Rv=math.atan2(y, x)*180/math.pi            #cap de A à B
+                if(Vspd-Rv>180): #vérifier
+                    VAdir=360-Vdir-Rv   #direction vent apparent 
+                elif(Vdir-Rv<-180):
+                    VAdir=Vdir-Rv+360   #direction vent apparent 
+                else:
+                    VAdir=Vdir-Rv       #direction vent apparent 
+                #vitesse bateau surface :
+                Vsuface=g(Vspd, VAdir)
+                
+                #truc sale pour Vfond et Rfond :
+                P=map.xyToGPS(A, [Vspd*math.cos(Rv*math.pi/180), Vspd*math.sin(Rv*math.pi/180)])
+                Q=map.xyToGPS(P, [Cspd*math.cos(Cdir*math.pi/180), Cspd*math.cos(Cdir*math.pi/180)])
+                [x,y]=map.gpsToXY(A,Q)
+                
+                Rv=math.atan2(y,x) #Route Vrai = Route fond
+                Vf=math.sqrt(x**2+y**2) #vitesse fond
+                
+                if(Vf<=0):
+                    t=1000
+                    #sys.stdout.write("vent de face \n")
+                    #sys.stdout.flush()
+                else:
+                    t=(distanceAB/1852)/Vf
+                    #sys.stdout.write("vitesse bateau "+str(Vf)+ " distanceAB="+str(distanceAB/1852)+"kns \n")
+                    #sys.stdout.flush()
+                uv=self.uv(a[0], a[1],int(temps))
+                #energie
+                [conso, prod]=e(Vspd, uv) #en Wh
+                conso*=t
+                prod*=t
+                energie+=prod-conso
+                #sys.stdout.write("prod "+str(prod)+ " conso="+str(conso)+"\n")
+                #sys.stdout.flush()
+                temps+=t
+                
+            batterie=100
+            a=-1 #<0 !!
+            c=10 #>0 !!
+            resultat=(a*energie**2+c)*(100-batterie)+temps*batterie
+            #sys.stdout.write("cout "+str(self.resultat[k])+" e "+str(energie)+" t "+str(temps)+"\n")
+            #sys.stdout.flush()
+            self.generation[self.nbwaypoints, k]=resultat
             
     def choixCellules(self, k:int, m:int)->list:
         """choisi les numéros des k cellules à garder 
@@ -655,11 +805,12 @@ class Ga :
         folium.PolyLine(self.resultat(True), color="red", weight=2.5, opacity=1).add_to(carte)
         
         #carte gen :
-        A=[self.map.zero[0], self.map.A[1]]
-        B=[self.map.A[0], self.map.zero[1]]
-        folium.PolyLine([self.map.zero, A, self.map.A, B, self.map.zero], color="black", weight=2.5, opacity=1).add_to(carte)
+        #A=[self.map.zero[0], self.map.A[1]]
+        #B=[self.map.A[0], self.map.zero[1]]
+        #folium.PolyLine([self.map.zero, A, self.map.A, B, self.map.zero], color="black", weight=2.5, opacity=1).add_to(carte)
         #
-        carte.save(outfile='map.html')
+        #carte.save(outfile='map.html')
+
 if __name__ == "__main__":
     A=[[0,0,0,"N"],[0,0,0,"E"]]
     B=[[[4,1,0,"N"],[4,5,0,"E"]],[[4,0,0,"N"],[4,0,0,"E"]]]
@@ -667,20 +818,21 @@ if __name__ == "__main__":
     Bm2=[[0,0,0.0,'N'], [0, 59, 59.8629, 'E']]
     C=[[0,0,0,"N"],[0,1,0,"E"]]
     to=time.time()
-    carte=map.Map3(A,B[1],1852,1)  #pas = 1852=1milles nautique
-    ga=Ga(C,A,B,10*1852,carte)
-    print("nbW",ga.nbwaypoints )
-    #print(map.decimauxToSexagesimaux2(ga.R1ToR0(1852,2,True)))
-    #print(ga.listDistance[2]/1852)
-    #print(map.decimauxToSexagesimaux2(map.xyToGPS(A,[1852, 4.625*1852])))
-    #print(map.xyToGPS(A,map.gpsToXY(A,Bm), False))
-    print(map.decimauxToSexagesimaux2(ga.Bm))
+    #carte=map.Map3(A,B[1],1852,1)  #pas = 1852=1milles nautique
+    stGa=StopGA(100)
+    ga=Ga(C,A,B,10*1852, stGa)
+
+    [i,j]=ga.R1ToMap(0,0)
+
+    t0=time.time()
     
-    ga.gen(1, 1, 3,1)   #pour le moment 3 1 best ou 3 3
-    print("gen in", time.time()-to, "s")
-    #for i in range():
-    print(ga.nbwaypoints)
-    print(map.decimauxToSexagesimaux2(ga.R1ToR0(ga.generation[ga.nbwaypoints-1,0],ga.nbwaypoints-1,True)))
-    ga.save()
+    stGa.start()
+    ga.start()   #pour le moment 3 1 best ou 3 3
+    
+    ga.join()
+    stGa.run()
+    print(time.time()-t0)
+    print(stGa.time)
+    #ga.save()
     
     

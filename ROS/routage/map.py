@@ -7,6 +7,7 @@ import math
 from sklearn.cluster import KMeans
 import statistics
 import time
+import sys 
 import json
 import requests 
 
@@ -207,7 +208,7 @@ class Map:
             return [i,j]
         else:
             p=decimauxToSexagesimaux2(P)
-            print("Hors Map :","P:",p,"x,y",[x,y],"i,j",[i,j])
+            #print("Hors Map :","P:",p,"x,y",[x,y],"i,j",[i,j])
             self.agrandissement(P)
             return self.R0ToMap(P)
             #return None
@@ -235,7 +236,7 @@ class Map:
         return self.map[i,j,h,0] #profondeur en m >0, si p<0 -> sol 
     
     def vent(self, i,j,h):
-        print(i,j,h, self.n, self.m, self.ptemps)
+        #print(i,j,h, self.n, self.m, self.ptemps)
         if(h>=self.ptemps): #si on a pas les prévisions assez loin, on prend la plus tardive
             h=self.ptemps-1
         #if h<currenttime-T0 #setData
@@ -294,16 +295,16 @@ class Map:
     
     def agrandissement(self, A:list)->None: #a vérifier
         """on agrandi la carte jusqua ce que A soit dans la map"""
-        print("starting agrandissement")
+        #print("starting agrandissement")
         t0=time.time()
         [x,y]=gpsToXY(self.zero,A)
         [i,j]=[int(x/self.pas), int(y/self.pas)]
         if(0<=i<=self.n and 0<=j<=self.m): #pas besoin de grandir
-            print("0")
+            #print("0")
             return None
         
         elif(i>self.n or j>self.m):
-            print("1")
+            #print("1")
             #si on a pas besoin de changer l'origine
             newmap=np.zeros((max(self.n,i), max(self.m,j), self.ptemps,12))
             for l in range(min(self.n,i)):
@@ -317,11 +318,11 @@ class Map:
         
         #si on a besoin de changer l'origine
         elif(i<0 and j>=0):
-            print("2")
+            #print("2")
             #on rajoute des cases vers le bas
             newmap=np.zeros((self.n+abs(i), self.m, self.ptemps,12))
             for l in range(self.n):
-                print(l)
+                #print(l)
                 for k in range(self.m):
                     for t in range(self.ptemps):
                         for m in range(12):
@@ -331,7 +332,7 @@ class Map:
             self.zero=[self.zero[0], A[1]]
             
         elif(i>=0 and j<0):
-            print("3")
+            #print("3")
             newmap=np.zeros((self.n, self.m+abs(j), self.ptemps,12))
             for l in range(self.n):
                 for k in range(self.m):
@@ -343,7 +344,7 @@ class Map:
             self.zero=[A[0], self.zero[1]]
         
         elif(i<0 and j<0):
-            print("4")
+            #print("4")
             newmap=np.zeros((self.n+abs(i), self.m+abs(j), self.ptemps,12))
             for l in range(self.n):
                 for k in range(self.m):
@@ -355,9 +356,9 @@ class Map:
             self.map=newmap
             self.zero=A
         else :
-            print("error map")
+            #print("error map")
             return "error"
-        print("finishing agrandissement in ", time.time()-t0, "s")
+        #print("finishing agrandissement in ", time.time()-t0, "s")
    
     def supprime(self,P:list): #a vérifier
         [i,j]=self.ROtoMap(P)
@@ -416,7 +417,7 @@ class Map2:
             return [i,j]
         else:
             p=decimauxToSexagesimaux2(P)
-            print("Hors Map :","P:",p,"x,y",[x,y],"i,j",[i,j])
+            #print("Hors Map :","P:",p,"x,y",[x,y],"i,j",[i,j])
             if(agran):
                 self.agrandissement(P)
                 return self.R0ToMap(P)
@@ -439,7 +440,7 @@ class Map2:
     def agrandissement(self, A:list)->None: #a vérifier
         """on agrandi la carte jusqua ce que A soit dans la map"""
         A=sexagesimauxToDecimaux2(A)
-        print("starting agrandissement")
+        #print("starting agrandissement")
         t0=time.time()
         
         [x,y]=gpsToXY(self.zero,A)
@@ -449,21 +450,21 @@ class Map2:
         
         [xa,ya]=gpsToXY(self.zero,A)
         [xc,yc]=gpsToXY(self.zero,self.A)
-        print("A", [xa/1852,ya/1852], "self.A", [xc/1852,yc/1852])
-        print("max",[max(xa,xc)/1852,max(ya,yc)/1852], "min",[min(xa,0)/1852,min(ya,0)/1852])
+        #print("A", [xa/1852,ya/1852], "self.A", [xc/1852,yc/1852])
+        #print("max",[max(xa,xc)/1852,max(ya,yc)/1852], "min",[min(xa,0)/1852,min(ya,0)/1852])
         
         B=xyToGPS(self.zero,[max(xa,xc),max(ya,yc)])
         zero=xyToGPS(self.zero,[min(xa,0),min(ya,0)])
 
-        print("agrandisement :")
-        print("Avant : zero",decimauxToSexagesimaux2(self.zero),"A" ,decimauxToSexagesimaux2(self.A))
-        print("Apres : zero",decimauxToSexagesimaux2(zero),"A" ,decimauxToSexagesimaux2(B))
+        #print("agrandisement :")
+        #print("Avant : zero",decimauxToSexagesimaux2(self.zero),"A" ,decimauxToSexagesimaux2(self.A))
+        #print("Apres : zero",decimauxToSexagesimaux2(zero),"A" ,decimauxToSexagesimaux2(B))
         if(0<=i<self.n and 0<=j<self.m): #pas besoin de grandir
-            print("0")
+            #print("0")
             return None
         
         elif((i>self.n or j>self.m) and (i>=0 and j>=0)):
-            print("1")
+            #print("1")
             #si on a pas besoin de changer l'origine
         
             ##on augmente en 2 fois : 
@@ -483,13 +484,14 @@ class Map2:
         
         ####test
         else:
-            print("2")
+            #print("2")
             #on décale le zéro et les cases
             newMap=Map2(zero,B, self.pas, self.H) #on crée une map plus grande
             p=newMap.n-self.n #on regarde sur quel angle on agrandi (égal à i,j si négatif ??? maybe)
             q=newMap.m-self.m #ne peut pas être strictement négatif
             for l in range(self.n):
                 for k in range(self.m):
+
                     if(self.map[l][k].gen): #si la cellule à été généré
                         newMap.map[l+p][k+q]=self.map[l][k] #on la copie
             self.map=newMap.map #on échange les map
@@ -551,12 +553,172 @@ class Map2:
             print("error map")
             return "error"
         """
-        print("finishing agrandissement in ", time.time()-t0, "s")
+        #print("finishing agrandissement in ", time.time()-t0, "s")
         
+
+class Map3: ###comme Map2 mais avec un verrou d'écriture sur l'agrandissement, faut-il le mettre sur la lecture ? 
+    def __init__(self, zero:list, A:list, pas:float, H:int):
+        [x,y]=gpsToXY(zero,A)
+        self.x=y
+        self.y=x
+        self.pas=pas
+        self.n=abs(int(x/pas))+1
+        self.m=abs(int(y/pas))+1
+        self.H=H
+        
+        #changement d'origine
+        if(x<0 and y>0):
+            zero,A=[zero[0], A[1]],[A[0], zero[1]]
+        elif(x>0 and y<0):
+            zero,A=[A[0], zero[1]],[zero[0], A[1]]
+        elif(x<0 and y<0):
+            zero,A=A,zero
+        #en latitude/longitude
+        self.zero=sexagesimauxToDecimaux2(zero)
+        self.A=sexagesimauxToDecimaux2(A)
+        
+        ##génération des cases 
+        self.map=[]
+        for i in range(self.n):
+            y=[]
+            for j in range(self.m):
+                y.append(Case(self.MapToR0(i,j), self.H))
+            self.map.append(y)
+        
+        
+        #compteur d'agrandisement
+        self.verrou=False
+        
+    def R0ToMap(self,P:list, agran:bool=True)->list:
+        """P: [lat,long]"""
+        [x,y]=gpsToXY(self.zero,P)
+        i=int(x/self.pas)
+        j=int(y/self.pas)
+        if(i>=0 and j>=0 and i<self.n and j<self.m):
+            return [i,j]
+        else:
+            p=decimauxToSexagesimaux2(P)
+            #print("Hors Map :","P:",p,"x,y",[x,y],"i,j",[i,j])
+            if(agran):
+                self.agrandissement(P)
+                return self.R0ToMap(P)
+            return [i,j]
+        
+    def MapToR0(self, i:int, j:int)->list:
+        [x,y]=self.MapToXY(i,j)
+        return xyToGPS(self.zero, [x,y])
+   
+    def MapToXY(self,i:int, j:int, unite:str="m")->list:
+        x=i*self.pas
+        y=j*self.pas
+        if(unite.lower()=="m"):
+            return [x,y]
+        if(unite.lower()=="nm" or unite.lower()=="kn" or unite.lower()=="kns"):
+            return [x/1852,y/1852]
+        if(unite.lower()=="km"):
+            return [x/1000,y/1000]
+
+    def agrandissement(self, A:list)->None: #a vérifier
+        """on agrandi la carte jusqua ce que A soit dans la map"""
+        
+        if(self.verrou):
+            sys.stdout.write("waiting.")
+            sys.stdout.flush()
+        else:
+            sys.stdout.write("prems"+str(decimauxToSexagesimaux2(A))+"\n")
+            sys.stdout.flush()
+            
+        while(self.verrou):
+            sys.stdout.write(".")
+            sys.stdout.flush()
+            time.sleep(0.1) 
+        sys.stdout.write("\n")
+        sys.stdout.flush()
+            
+        self.verrou=True    
+        
+        A=sexagesimauxToDecimaux2(A)
+        #print("starting agrandissement")
+        t0=time.time()
+        
+        [x,y]=gpsToXY(self.zero,A)
+        i=int(x/self.pas)
+        j=int(y/self.pas)
+        
+        [xa,ya]=gpsToXY(self.zero,A)
+        [xc,yc]=gpsToXY(self.zero,self.A)
+        
+        B=xyToGPS(self.zero,[max(xa,xc),max(ya,yc)])
+        zero=xyToGPS(self.zero,[min(xa,0),min(ya,0)])
+
+        if(0<=i<self.n and 0<=j<self.m): #pas besoin de grandir
+            #print("0")
+            self.verrou=False
+            return None
+        
+        elif((i>self.n or j>self.m) and (i>=0 and j>=0)):
+            for l in range(min(self.n,i)):
+                for k in range(min(self.m,j), max(self.m,j)):
+                    self.map[l].append(Case(self.MapToR0(l,k), self.H))
+            
+            for l in range(min(self.n, j), max(self.m,j)):
+                y=[]
+                for k in range(max(self.m,j)):
+                    y.append(Case(self.MapToR0(l,k), self.H))
+                self.map.append(y)
+            
+            self.n=max(self.n,i)
+            self.m=max(self.m,j)
+            self.A=B
+
+        else:
+            #on décale le zéro et les cases
+            newMap=Map3(zero,B, self.pas, self.H) #on crée une map plus grande
+            p=newMap.n-self.n #on regarde sur quel angle on agrandi (égal à i,j si négatif ??? maybe)
+            q=newMap.m-self.m #ne peut pas être strictement négatif
+            for l in range(self.n):
+                for k in range(self.m):
+                    #sys.stdout.write("l,k"+ str([l,k])+str([self.n, self.m])+ str([len(self.map), len(self.map[0])])+"\n")
+                    #sys.stdout.flush()
+                    if(self.map[l][k].gen): #si la cellule à été généré
+                        newMap.map[l+p][k+q]=self.map[l][k] #on la copie
+            self.map=newMap.map #on échange les map
+            self.A=newMap.A
+            self.zero=newMap.zero
+            self.n=newMap.n
+            self.m=newMap.m
+            self.x=newMap.x
+            self.y=newMap.y
+
+        self.verrou=False
+
+    def vent(self, P:list, h:int, agran:bool=True):
+        [i,j]=self.R0ToMap(P, agran)
+        if(0<=i<self.n and 0<=j<self.m):
+            return self.map[i][j].vent(h)
+        else:
+            print("error méteo")
+            return None
+    
+    def courant(self, P:list, h:int, agran:bool=True):
+        [i,j]=self.R0ToMap(P, agran)
+        if(0<=i<self.n and 0<=j<self.m):
+            return self.map[i][j].courant(h)
+        else:
+            print("error méteo")
+            return None
+    
+    def uv(self,P:list, h:int, agran:bool=True):
+        [i,j]=self.R0ToMap(P, agran)
+        if(0<=i<self.n and 0<=j<self.m):
+            return self.map[i][j].uv(h)
+        else:
+            print("error méteo")
+            return None
 class Case:
     def __init__(self, coordonnee:list,H:int=3*34):
         self.H=H
-        self.content=np.zeros((12,self.H))
+        self.content=np.zeros((13,self.H)) #profondeur, vent (spd, dir), courant (spd, dir), houle (A, freq, dir), air (T, H, P) eau (T, S), ciel (UV, nuage)  ?? 
         self.gen=False
         self.coordonnee=coordonnee
 
@@ -600,7 +762,7 @@ class Case:
         if(not self.gen):
             self.setData()
             
-        return [self.map[8,h], self.map[9,h]] #T, H
+        return [self.content[8,h], self.content[9,h]] #T, H
     
     def eau(self,h):
         if(h>=self.H): #si on a pas les prévisions assez loin, on prend la plus tardive
@@ -609,10 +771,18 @@ class Case:
         if(not self.gen):
             self.setData()
             
-        return [self.map[10,h], self.map[11,h]] #T, S
+        return [self.content[10,h], self.content[11,h]] #T, S
+    
+    def uv(self, h):
+        if(h>=self.H): #si on a pas les prévisions assez loin, on prend la plus tardive
+            h=self.H-1
+        #if h<currenttime-T0 #setData
+        if(not self.gen):
+            self.setData()
+        return self.content[12,h]
     
     def setData(self):
-        print("set data", decimauxToSexagesimaux2(self.coordonnee))
+        #print("set data", decimauxToSexagesimaux2(self.coordonnee))
         if(False):
             self.coordonnee=sexagesimauxToDecimaux2(self.coordonnee)
             lat=str(self.coordonnee[0])
@@ -647,8 +817,101 @@ class Case:
                 self.content[9,h]=50     #H air
                 self.content[10,h]=12    #T eau
                 self.content[11,h]=34    #S eau
+                self.content[12,h]=random.randint(6,12)
         self.gen=True
         
+class Map4:
+    ##le but c'est de faire un map adapté a la Ga
+    def __init__(self, zero:list,listDistance:list, largeurRoute:float, pas:float,H:int, porte:list):
+        self.listDistance=listDistance
+        self.largeurRoute=largeurRoute
+        self.pas=pas
+        self.zero=zero
+        self.porte=porte
+        self.porte[0]=map.sexagesimauxToDecimaux2(self.porte[0])
+        self.porte[1]=map.sexagesimauxToDecimaux2(self.porte[1])
+        
+        self.largeurRoute=largeurRoute                      #largeur de la route (évite que le bateau sorte)
+        [x0,y0]=map.gpsToXY(self.zero,self.porte[0])
+        [x1,y1]=map.gpsToXY(self.zero,self.porte[1])
+        [x,y]=[(x0+x1)/2, (y0+y1)/2]
+        self.Bm=map.xyToGPS(self.zero,[x,y])
+        self.Bm=map.sexagesimauxToDecimaux2(self.Bm)
+        
+        self.H=H
+        #generation de la map. 
+        self.map=[[Case(self.MapToR0(i,j), H) for j in range(-self.largeurRoute//self.pas,self.largeurRoute//self.pas)] for i in range(len(self.listDistance))]
+        self.map.append([Case(self.MapToR0(i,j), H) for j in range(-distanceGPS(-self.porte[0]//(2*self.pas),self.porte[1]//(2*self.pas)))])
+    
+    def MapToR0(self, i,j):
+        """R1 : repère de la route
+        R0 : repère terrestre
+        i : largeur par rapport a la route
+        j : indice de la perpendiculaire"""
+        if(i<len(self.listDistance)): #les premiers points
+            [x,y]=gpsToXY(self.zero,self.Bm)
+            alpha=math.atan2(y,x) 
+            gama=math.atan2(j, self.listDistance[i])
+            #return [self.listDistance[d]*math.cos(alpha)+r*math.cos(alpha+gama), self.listDistance[d]*math.sin(alpha)+r*math.sin(gama+alpha)]
+            distance=math.sqrt(self.listDistance[i]**2+j**2)
+            #r=[distance*math.sin(alpha+gama),distance*math.cos(alpha+gama)] #? à inversé ? comme avant ? 
+            r=[distance*math.cos(alpha+gama),distance*math.sin(alpha+gama)] #"normal"
+            
+            return map.xyToGPS(self.A, r)
+            
+        elif(i==len(self.listDistance)): # le dernier est sur l'axe B1, B2
+            #[x,y]=map.gpsToXY(self.A,self.Bm) 
+            #alpha=math.atan2(y,x)
+            #[x1,y1]=map.gpsToXY(self.B[0], self.B[1])
+            #beta=math.atan2(y1,x1)
+            #distanceRoute=math.sqrt(x**2+y**2)
+            ##r=[distanceRoute*math.sin(alpha)+r*math.sin(beta),distanceRoute*math.cos(alpha)+r*math.sin(beta)] #avant
+            #r=[distanceRoute*math.cos(alpha)+r*math.sin(beta),distanceRoute*math.sin(alpha)+r*math.sin(beta)] #apres
+            [xb,yb]=map.gpsToXY(self.porte[0], self.porte[1])
+            beta=math.atan2(yb,xb) #azimut B0-B1 angle sur le quel le dernier waypoint se balade
+            #r : distance entre Bm et le dernier waypoints dans l'axe de la porte
+            x=r*math.cos(beta)
+            y=r*math.cos(beta)
+            P=map.xyToGPS(self.Bm, [x,y])
+            
+            return P
+            
+    def R0ToMap(self,P:list, restreintMap:bool=False):
+        [x,y]=gpsToXY(self.zero, P)
+        j=int((y-self.largeurRoute)/self.pas)
+        
+        for k in range(len(self.listDistance)+1):
+            if(x>=self.listDistance[k]):
+                if(k>0):
+                    moyenne=(self.listDistance[k-1]+self.listDistance[k])/2
+                    if(x<moyenne):
+                        i=k-1
+                    else:
+                        i=k
+                else:
+                    i=k
+        if(0<=i<len(self.map)):
+            if(0<=j<=len(self.map[i])):
+                return [i,j]
+            else:
+                if(not restreintMap):
+                    return [i,j]
+        else:
+            if(not restreintMap):
+                return [i,j]
+        
+    def vent(self, P:list, h:int):
+        [i,j]=self.R0ToMap(P, True)
+        return self.map[i][j].vent(h)
+
+    def courant(self, P:list, h:int, agran:bool=True):
+        [i,j]=self.R0ToMap(P, True)
+        return self.map[i][j].courant(h)
+    
+    def uv(self,P:list, h:int, agran:bool=True):
+        [i,j]=self.R0ToMap(P, True)
+        return self.map[i][j].uv(h)
+
         
 class Carte(Map): #pour le moment la map est fixe cad la météo est prise à un temps T
     def __init__(self, x:int, y:int, zero:list, pas:float):
@@ -730,7 +993,7 @@ class Carte(Map): #pour le moment la map est fixe cad la météo est prise à un
                     
                 self.coef.append([self.map[i,j,k] for k in [0]]) #on ne prend pas les directions 0, 2, 4,5
         
-        print(s)
+        #print(s)
         #plt.title("r 0, g 1, b 2, y 3")
         #plt.show()
         
@@ -813,26 +1076,26 @@ if __name__ == "__main__":
     D=[[[1,0,0,"N"],[1,0,0,"E"]],[[1,0,0,"S"],[1,0,0,"E"]]]
     E=[[0,0,0,"N"],[1,0,0,"E"]]
     x=[-43.2964, 43.2964]
-    print(xyToGPS(A,[59.9999*1852,60*1852],False))
+    #print(xyToGPS(A,[59.9999*1852,60*1852],False))
     
     F=[[1,0,0,"N"],[0,0,0,"E"]]
     
     
-    carte=Map2(A,F,1852,3*24)
+    #carte=Map2(A,F,1852,3*24)
     
     #print(carte.R0ToMap(F, False))
     #print(gpsToXY(A,F, "kns"))
-    [i,j]=carte.R0ToMap(F,False)
-    print("i,j",[i,j],carte.n,carte.m )
-    print("FAvant=", decimauxToSexagesimaux2(carte.MapToR0(i,j)), decimauxToSexagesimaux2(carte.map[i][j].coordonnee), F)
-    carte.agrandissement(C)
-    [i,j]=carte.R0ToMap(F,False)
-    print("i,j",[i,j],carte.n,carte.m )
-    print("FApres=", decimauxToSexagesimaux2(carte.MapToR0(i,j)), decimauxToSexagesimaux2(carte.map[i][j].coordonnee), F)
-    [i,j]=carte.R0ToMap(C,False)
-    print("i,j",[i,j],carte.n,carte.m )
-    print("Bapres=", decimauxToSexagesimaux2(carte.MapToR0(i,j)), decimauxToSexagesimaux2(carte.map[i][j].coordonnee), C)
-    print(decimauxToSexagesimaux2(carte.zero),  decimauxToSexagesimaux2(carte.A))
+    #[i,j]=carte.R0ToMap(F,False)
+    #print("i,j",[i,j],carte.n,carte.m )
+    #print("FAvant=", decimauxToSexagesimaux2(carte.MapToR0(i,j)), decimauxToSexagesimaux2(carte.map[i][j].coordonnee), F)
+    #carte.agrandissement(C)
+    #[i,j]=carte.R0ToMap(F,False)
+    #print("i,j",[i,j],carte.n,carte.m )
+    #print("FApres=", decimauxToSexagesimaux2(carte.MapToR0(i,j)), decimauxToSexagesimaux2(carte.map[i][j].coordonnee), F)
+    #[i,j]=carte.R0ToMap(C,False)
+    #print("i,j",[i,j],carte.n,carte.m )
+    #print("Bapres=", decimauxToSexagesimaux2(carte.MapToR0(i,j)), decimauxToSexagesimaux2(carte.map[i][j].coordonnee), C)
+    #print(decimauxToSexagesimaux2(carte.zero),  decimauxToSexagesimaux2(carte.A))
     #[x0,y0]=gpsToXY(A,D[0])
     #[x1,y1]=gpsToXY(A,D[1])
     #print(x0,y0,"/",x1,y1, "#",(x0+x1)/2,(y0+y1)/2)
