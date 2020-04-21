@@ -259,7 +259,7 @@ class Ga :
 
 if __name__ == "__main__":
     #carte=np.random.rand(100,100)
-    ga=Ga([0,0], [[100,9],[100,11]], 5)
+    ga=Ga([0,0], [[0,10],[0,10]], 5)
     ga.fctgeneration(10,100,100,2,2)  #2,2 meillieur, plus rapide  100 100 100 #1, 2 pas bon
     ga.affiche(0)
 

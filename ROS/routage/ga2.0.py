@@ -7,11 +7,10 @@ import time
 import map
 import threading
 import sys
+import folium 
 
-import folium ##pour l'interface graphique
-##source ALGORITHMES GENETIQUES Présenté par Souquet Amédée Radet Francois-Gérard
 
-def g(v:float,theta:float): #test vitesse bateau en fct du vent
+def g(v:float,theta:float): # vitesse bateau en fct du vent
     if(-5<theta<5):
         x= 0
     elif(-20<theta<20):#hormis [-5, 5]
@@ -48,8 +47,10 @@ def g(v:float,theta:float): #test vitesse bateau en fct du vent
             c=X[2]
             x=a*theta**2+b*theta+c
     v=abs(v)
-    A=np.array(([30**2, 30, 1],[10**2, 10, 1], [50**2, 50, 1]))
-    Y=np.array((4, 1, 3))
+    #A=np.array(([30**2, 30, 1],[10**2, 10, 1], [50**2, 50, 1]))
+    #Y=np.array((4, 1, 3))
+    A=np.array(([0, 0, 1],[30**2, 30, 1], [80**2, 80, 1]))
+    Y=np.array((0, 20, 3))
     X=np.dot(np.linalg.inv(A),Y)
     a=X[0]
     b=X[1]
@@ -57,93 +58,34 @@ def g(v:float,theta:float): #test vitesse bateau en fct du vent
     y=a*v**2+b*v+c
     return abs(x*y)/10
 
-def e(vent:float, uv:int):
-    return [vent/2+10, (2*uv**2+uv+10)/10] #conso, prod 
+def e(vent:float, uv:int): #conso, prod en fonction de la météo
+    return [vent/2+10, (2*uv**2+uv+10)/10] 
     
-##faire une classe bateau : coo départ (ga.C), batterie départ, 
-class CalculCout(threading.Thread):
-    #Le but de cette classe est de calculer le coup des cellules en parallele
-    #
-    def __init__(self, cellules:list, carte:map.Map3):
+class StopGA(threading.Thread):
+    def __init__(self, tarret:float, ga):
         threading.Thread.__init__(self)
-        self.cellules=cellules #en coordonées GPS direct 
-        self.carte=carte
-        self.resultat=np.zeros(len(self.cellules))
-    def fctCout(self,k:int):
-        #temps de la cellules k 
-        #Rv : route vrai (route fond)
-        #Rs : route surface
-        #Cv: cap vrai 
-        #d : dérive du au courant
-        A=self.cellules[k][0]
-        temps=0   #en h
-        energie=0 #différence production/conso en W 
-        for i in range(1, len(self.cellules[k])):
-            B=self.cellules[k][i]
-            ###distance AB
-            distanceAB=map.distanceGPS(A,B)
-            ##vitesse AB
-            #vent reel AB    
-            [Vspd, Vdir]=self.carte.vent(A, int(temps))
-            #courant AB
-            [Cspd, Cdir]=self.carte.courant(A, int(temps))
-            
-            #vent apparent 
-            #on suppose que seul Vdir est impacté 
-            [x,y]=map.gpsToXY(A,B)                          #on génère les x,y de w p/r à p
-            Rv=math.atan2(y, x)*180/math.pi            #cap de p à w
-            if(Vspd-Rv>180): #vérifier
-                VAdir=360-Vdir-Rv   #direction vent apparent 
-            elif(Vdir-Rv<-180):
-                VAdir=Vdir-Rv+360   #direction vent apparent 
-            else:
-                VAdir=Vdir-Rv       #direction vent apparent 
-            #vitesse bateau surface :
-            Vsuface=g(Vspd, VAdir)
-            
-            #truc sale pour Vfond et Rfond :
-            P=map.xyToGPS(A, [Vspd*math.cos(Rv*math.pi/180), Vspd*math.sin(Rv*math.pi/180)])
-            Q=map.xyToGPS(P, [Cspd*math.cos(Cdir*math.pi/180), Cspd*math.cos(Cdir*math.pi/180)])
-            [x,y]=map.gpsToXY(A,Q)
-            
-            Rv=math.atan2(y,x) #Route Vrai = Route fond
-            Vf=math.sqrt(x**2+y**2) #vitesse fond
-            
-            if(Vf<=0):
-                t=1000
-                sys.stdout.write("vent de face \n")
-                sys.stdout.flush()
-            else:
-                t=(distanceAB/1852)/Vf
-                sys.stdout.write("vitesse bateau "+str(Vf)+ " distanceAB="+str(distanceAB/1852)+"kns \n")
-                sys.stdout.flush()
-            uv=self.carte.uv(A,int(temps))
-            #energie
-            [conso, prod]=e(Vspd, uv) #en Wh
-            conso*=t
-            prod*=t
-            energie+=prod-conso
-            sys.stdout.write("prod "+str(prod)+ " conso="+str(conso)+"\n")
-            sys.stdout.flush()
-            temps+=t
-            
-        batterie=100
-        a=-1 #<0 !!
-        c=10 #>0 !!
-        self.resultat[k]=(a*energie**2+c)*(100-batterie)+temps*batterie
-        sys.stdout.write("cout "+str(self.resultat[k])+" e "+str(energie)+" t "+str(temps)+"\n")
-        sys.stdout.flush()
+        self.verrou=False
+        self.time=0
+        self.tmax=tarret
+        self.ga=ga
     def run(self):
-        for k in range(len(self.cellules)):
-            self.fctCout(k)
+        t0=time.time()
+        self.time=time.time()-t0
+        while(self.ga.isRun): 
+            if(self.tmax!=None):
+                if(self.time>self.tmax): #condition de fin de la GA
+                    self.verrou=True
+                    sys.stdout.write("demande stop ga")
+                    sys.stdout.flush()
+                
+        sys.stdout.write("ga was stop \n")
+        sys.stdout.flush()
         
-    def getResultat(self):
-        return self.resultat
-
-
-class Ga :
-    def __init__(self, C:"depart reel", A:"depart th", B:"porte arrivee", largeurRoute:float,carte:map.Map):
+class Ga(threading.Thread):
+    def __init__(self, C:"depart reel", A:"depart th", B:"porte arrivee", largeurRoute:float, stopGa:StopGA):
         """A,B,C en lat/long"""
+        threading.Thread.__init__(self)
+        
         self.nbwaypoints=None                                  #nb de points par cellules
         self.nbCellules=None                                   #nb de cellules de l'algo
         self.nbGenerations=None                                #nb de génération
@@ -168,29 +110,54 @@ class Ga :
         self.BestCout=[]
         self.meanCout=[]
         
-        self.map=carte
+        self.map=[]
+        self.H=None
+        self.pas=None
         
         self.setNbWaypoint()   #nb de waypoint générer pour tracer la route      
+        self.setMap(1852, 1)
+        
+        self.stopGa=stopGa
+        self.isRun=True
+        
+        self.batterieBestCout=[]
+        self.methodeCout=2
+        self.tempsBestCout=[]
     
-    def gen(self,nbCellules:int, nbGenerations:int, mEvol:int, mChoix:int):
+        self.mCout=None
+        self.mEvol=None
+        self.mChoix=None
+        
+    def gen(self,nbCellules:int=None, nbGenerations:int=None, mEvol:int=None, mChoix:int=None, mCout:int=None):
         #self.setNbWaypoint()   #nb de waypoint générer pour tracer la route                
-        self.nbCellules=nbCellules
-        self.nbGenerations=nbGenerations
+        if(self.nbCellules!=None):
+            self.nbCellules=nbCellules
+        if(self.nbCellules!=None):
+            self.nbGenerations=nbGenerations
+        if(self.mEvol!=None):
+            self.mEvol=mEvol
+        if(self.mChoix!=None):
+            self.mChoix=mChoix
+        if(self.mCout!=None):
+            self.mCout=mCout
+            
         self.generation=np.zeros((self.nbwaypoints+1,self.nbCellules)) #on travaille en 1D dans le repère de la route le dernier élément est le cout de la cellule
         #self.map=map.Map(self.nbwaypoints, max(2*int(self.largeurRoute),int(math.sqrt(math.pow(self.B[0][0]-self.B[1][0],2)+math.pow(self.B[0][1]-self.B[1][1],2)))), 3*24)
         #################
         # Initilisation #
         #################
+        
         for k in range(self.nbCellules):                               #on crée les premières cellules                                
             for i in range(0,self.nbwaypoints-1):
                 self.generation[i,k]=random.random()*2*self.largeurRoute-self.largeurRoute    #tire la 1er génération
                 #self.generation[i,k]=0
-            [x,y]=map.gpsToXY(B[0],B[1])
+            [x,y]=map.gpsToXY(self.B[0],self.B[1])
             largeurporte=math.sqrt(x**2+y**2)
             self.generation[self.nbwaypoints-1,k]=random.random()*largeurporte-largeurporte/2
             #le dernier waypoint
             
-            self.fctCout(k,1) #la dernière case est le cout    
+            self.fctCout(k,self.methodeCout) #la dernière case est le cout    
+
         element = lambda T: T[0]
         T=[[self.generation[self.nbwaypoints,i],i]  for i in range(self.nbCellules)]
         T=sorted(T,key=element,reverse=False) #on fait le trie sur le cout des cellules
@@ -198,31 +165,31 @@ class Ga :
         self.meanCout.append(statistics.mean([T[i][0] for i in range(len(T))]))
         
         for g in range(self.nbGenerations-1):
-            if(mEvol==1):
+            if(self.mEvol==1):
                 #####################
                 # reproduction      #
                 #####################
-                self.reproduction(1, mChoix) #croissement cellulaire
+                self.reproduction(1, self.mChoix) #croissement cellulaire
                 self.reproduction(2) #mutation
-            elif(mEvol==2):
+            elif(self.mEvol==2):
                 #############
                 # Evolution # 
                 #############
-                c=self.choixCellules(self.nbCellules//2+1,mChoix)
+                c=self.choixCellules(self.nbCellules//2+1,self.mChoix)
                 #on garde que les cellules choisi, les autres sont copier (ou reproduite ?)
-                for j in range(self.nbwaypoints):
+                for j in range(self.nbCellules):
                     if(not j in c):
-                        self.generation[:,j]=self.generation[:,random.choices(c,k=1)[0]]
+                        self.generation[:,j]=self.generation[:,random.choices(c)[0]]
                 
                 self.evolution(2)  #évolution avec une certaine méthode
-                self.evolution(1)
+                self.reproduction(2) #mutation
             
-            elif(mEvol==3):
+            elif(self.mEvol==3):
                 #####################
                 # reproduction      #
                 #####################
                 #les enfants sont les cellules qu'on garde pas 
-                choix=self.choixCellules(self.nbCellules//3+1,mChoix)
+                choix=self.choixCellules(self.nbCellules//3+1,self.mChoix)
                 pc=0.1 #proba de corssover
                 co=2 #nb de points de crossover
                 #croissement génétique
@@ -262,50 +229,75 @@ class Ga :
                     self.generation[self.nbwaypoints-1,j]=random.random()*map.distanceGPS(self.B[0], self.B[1])-map.distanceGPS(self.B[0], self.B[1])/2#random.random()*math.sqrt(math.pow(self.B[0][0]-self.B[1][0],2)+math.pow(self.B[0][1]-self.B[1][1],2))-math.sqrt(math.pow(self.B[0][0]-self.B[1][0],2)+math.pow(self.B[0][1]-self.B[1][1],2))/2 
                 
                 self.reproduction(2) #mutation 
-                #self.evolution(1)
+
                 
             #calcul du cout de chaque cellules
-            if(False):
-                #avan
-                for j in range(self.nbCellules): 
-                    self.fctCout(j,1)             #mise à jour du cout
-                #660s 
-            else:
-                #après
-                ###on tente le multithreading
-                #on divise les cellules en deux liste et on converti le tout en GPS
-                nbThread=2  #2thread 15% (570s) 3thread 650s :/ 
-                Thread=[]
-                for m in range(nbThread):
-                    c=[]
-                    for k in range(self.nbCellules//nbThread*m, self.nbCellules//nbThread*(m+1)):
-                        y=[]
-                        for l in range(self.nbwaypoints):
-                            y.append(self.R1ToR0(self.generation[l][k], l, True))
-                        c.append(y)
-                    Thread.append(CalculCout(c, self.map))
+            for j in range(self.nbCellules): 
+                self.fctCout(j,self.methodeCout) 
 
-                for m in range(nbThread):
-                    Thread[m].start()
-                for m in range(nbThread):
-                    Thread[m].join()
-
-                resultat=[]
-                for m in range(nbThread):
-                    res=Thread[m].getResultat()
-                    for e in res:
-                        resultat.append(e)
-                
-                for i in range(len(resultat)):
-                    self.generation[self.nbwaypoints, i]=resultat[i]
 
             element = lambda T: T[0]
             T=[[self.generation[self.nbwaypoints,i],i]  for i in range(self.nbCellules)]
             T=sorted(T,key=element,reverse=False) #on fait le trie sur le cout des cellules
             self.BestCout.append(T[0][0])
+            if(self.methodeCout==2):
+                c=self.fctCout(T[0][1],2,True)
+                self.batterieBestCout.append(c[0]*100)
+                self.tempsBestCout.append(c[1])
             self.meanCout.append(statistics.mean([T[i][0] for i in range(len(T))]))
 
-    def setNbWaypoint(self)->"void":
+
+            if(self.stopGa.verrou):
+                print("fin gen : externe")
+                self.isRun=False
+                break
+        
+        self.isRun=False
+    
+    def run(self):
+        self.gen(self.nbCellules, self.nbGenerations, self.mEvol, self.mChoix, self.mCout) #evol, choix
+    
+    def setRun(self,nbCellules:int, nbGenerations:int, mEvol:int, mChoix:int, mCout:int):
+        self.nbCellules=nbCellules
+        self.nbGenerations=nbGenerations
+        self.mEvol=mEvol
+        self.mChoix=mChoix
+        self.mCout=self.mCout
+        
+    def setMap(self, pas2D:float, time:int):
+        self.pas=pas2D
+        self.H=time
+        
+        #la carte est adapté au ligne de waypoints
+        #chaque colonne de la map est un segment de waypoints
+        self.map=[[map.Case(self.R1ToR0(j, i), self.H) for j in range(-int(self.largeurRoute//self.pas), int(self.largeurRoute//self.pas)+1)] for i in range(self.nbwaypoints-1)]
+        distanceB1B2=map.distanceGPS(self.B[0],self.B[1])
+        self.map.append([map.Case(self.R1ToR0(j, self.nbwaypoints), self.H) for j in range(-int(distanceB1B2/2//self.pas), int(distanceB1B2/2//self.pas))])
+        
+    def R1ToMap(self, d:float, r:int):
+        r=[r, int(d//self.pas+self.largeurRoute//self.pas)]
+        if(0<=r[0]< len(self.map)):
+            if(not 0<=r[1]<len(self.map[r[0]])):
+                
+                return r
+        else:
+            
+            return r
+        return r
+    
+    def vent(self, d:float, r:int, h:int):
+        [i,j]=self.R1ToMap(d,r)
+        if(0<=i<=self.nbwaypoints):
+            if(0<=j<len(self.map[i])):
+                return self.map[i][j].vent(h)
+    
+    def uv(self, d:float, r:int, h:int):
+        [i,j]=self.R1ToMap(d,r)
+        if(0<=i<=self.nbwaypoints):
+            if(0<=j<len(self.map[i])):
+                return self.map[i][j].uv(h)
+    
+    def setNbWaypoint(self):
         """Cela permet de set automatiquement le nb de waypoint. La distance en projection sur x1 entre 
         deux waypoints est une fonction croissante (type ln)
         Le dernier waypoint est sur l'axe B[0], B[1] donc la distance entre l'avant dernier waypoint et le suivant est variable suivant la cellule
@@ -313,16 +305,17 @@ class Ga :
         Il y a donc au moins un waypoint : celui sur l'axe B[0], B[1]"""
         a=0.025*1852
         b=0.5*1852
-        c=1852 #le premier point est à 1 milles nautique
+        c=1852 #le premier point est à 1 mile nautique
         self.listDistance=[c]
         distanceAB=map.distanceGPS(self.A,self.Bm, 2)
-        #print(distanceAB)
+
         i=1
         while(self.listDistance[-1]<distanceAB):
             self.listDistance.append(self.listDistance[-1]+a*i**2+b*i+c)
             #self.listDistance.append(self.listDistance[-1]+math.log(a*i**2+b*i+c)+c)
             i+=1
         self.nbwaypoints=i
+        
         return True
         
     def R1ToR0(self, r:float, d:int, gps=True)->list:
@@ -334,22 +327,13 @@ class Ga :
             [x,y]=map.gpsToXY(self.A,self.Bm)
             alpha=math.atan2(y,x) 
             gama=math.atan2(r, self.listDistance[d])
-            #return [self.listDistance[d]*math.cos(alpha)+r*math.cos(alpha+gama), self.listDistance[d]*math.sin(alpha)+r*math.sin(gama+alpha)]
             distance=math.sqrt(self.listDistance[d]**2+r**2)
-            #r=[distance*math.sin(alpha+gama),distance*math.cos(alpha+gama)] #? à inversé ? comme avant ? 
             r=[distance*math.cos(alpha+gama),distance*math.sin(alpha+gama)] #"normal"
             if(gps):
                 return map.xyToGPS(self.A, r)
             else:
                 return r
         elif(d==self.nbwaypoints-1): # le dernier est sur l'axe B1, B2
-            #[x,y]=map.gpsToXY(self.A,self.Bm) 
-            #alpha=math.atan2(y,x)
-            #[x1,y1]=map.gpsToXY(self.B[0], self.B[1])
-            #beta=math.atan2(y1,x1)
-            #distanceRoute=math.sqrt(x**2+y**2)
-            ##r=[distanceRoute*math.sin(alpha)+r*math.sin(beta),distanceRoute*math.cos(alpha)+r*math.sin(beta)] #avant
-            #r=[distanceRoute*math.cos(alpha)+r*math.sin(beta),distanceRoute*math.sin(alpha)+r*math.sin(beta)] #apres
             [xb,yb]=map.gpsToXY(self.B[0], self.B[1])
             beta=math.atan2(yb,xb) #azimut B0-B1 angle sur le quel le dernier waypoint se balade
             #r : distance entre Bm et le dernier waypoints dans l'axe de la porte
@@ -360,11 +344,8 @@ class Ga :
                 return P
             else:
                 return map.gpsToXY(self.A, P)
-            
-        else:
-            print("error waypoint inconnu")
 
-    def fctCout(self, k:int, coef:int=0):
+    def fctCout(self, k:int, coef:int=2, getInfo:bool=False):
         if(coef==0): #distance
             """k : indice de la cellule"""
             s=0 #longueur du chemin
@@ -375,38 +356,108 @@ class Ga :
                 s+=math.sqrt(x**2+y**2)
                 p=w
             self.generation[self.nbwaypoints, k]=s
+        
         elif(coef==1):
             #on prend la vitesse du vent au premier waypoint A et on prend la direction entre A et B
-            t=0  #temps pour le trajet
-            p=self.C
-            for l in range(self.nbwaypoints):
-                w=self.R1ToR0(self.generation[l,k], l, True)  #on genère les coo GPS de la l iem celules
-                [x,y]=map.gpsToXY(p,w)                          #on génère les x,y de w p/r à p
-                cap=math.atan2(y, x)*180/math.pi            #cap de p à w
-                #print(k,l,t)
-                h=int(t)
-                [i,j]=self.map.R0ToMap(w, True)             #on cherche les coo de la case et on agrandi la map si elle est trop petite
-                #print("i,j", i,j, "map", self.map.n, self.map.m)
-                #print("diff",map.decimauxToSexagesimaux2(self.map.map[i][j].coordonnee), "#", map.decimauxToSexagesimaux2(w))
-                Vreel=self.map.map[i][j].vent(h) #vent reel     #on génère les paramètres météo de la case
-                dist=map.distanceGPS(p,w)                       #distance entre p et w
-                 
-                #vent apparent pour le moment sans prendre en compte la vitesse du bateau
-                if(Vreel[1]-cap>180): #vérifier
-                    Vapp=[Vreel[0], 360-Vreel[1]-cap]
-                elif(Vreel[1]-cap<-180):
-                    Vapp=[Vreel[0], Vreel[1]-cap+360]
-                else:
-                    Vapp=[Vreel[0], Vreel[1]-cap]
+            a=[self.generation[0,k], 0]
+            temps=0   #en h
+            for i in range(1, self.nbwaypoints): 
+                b=[self.generation[i,k], i]
+                ###distance AB
+                A=self.R1ToR0(a[0], a[1], True)
+                B=self.R1ToR0(b[0], b[1], True)
+                distanceAB=map.distanceGPS(A,B)
+                ##vitesse AB
+                #vent reel AB    
+                [Vspd, Vdir]=self.vent(a[0], a[1], int(temps))
+
+                #vent apparent 
+                #on suppose que seul Vdir est impacté 
+                [x,y]=map.gpsToXY(A,B)                          #on génère les x,y de A p/r à B
+                Rv=math.atan2(x, y)*180/math.pi            #cap de A à B
+                if(Rv<0):
+                    Rv+=360
+                VAdir=Vdir-Rv
+                if(VAdir<-180):
+                    VAdir+=360
+                if(VAdir>180):
+                    VAdir-=360
                 
-                Vbateau=g(Vapp[0], Vapp[1])
-                if(Vbateau<=0):
-                    Tpw=1000
+                #vitesse bateau surface :
+                Vsuface=g(Vspd, VAdir)
+
+                if(Vsuface<=0):
+                    t=1000+2*temps
                 else:
-                    Tpw=dist/Vbateau/1000
-                t+=Tpw
-                p=w
-            self.generation[self.nbwaypoints, k]=t #temps de trajet entre A et B
+                    t=(distanceAB/1852)/Vsuface
+                temps+=t
+                a=b
+            self.generation[self.nbwaypoints, k]=temps
+
+        elif(coef==2):
+
+            a=[self.generation[0,k], 0]
+            temps=0   #en h
+            energie=0 #différence production/conso en W 
+            
+            batterieTot=1000
+            batterie=batterieTot*0.7
+            resultat=0
+            for i in range(1, self.nbwaypoints): 
+                b=[self.generation[i,k], i]
+                ###distance AB
+                #print("dans cout : a", a, "b", b) 
+                A=self.R1ToR0(a[0], a[1], True)
+                B=self.R1ToR0(b[0], b[1], True)
+                distanceAB=map.distanceGPS(A,B)
+                ##vitesse AB
+                #vent reel AB    
+                [Vspd, Vdir]=self.vent(a[0], a[1], int(temps))
+                #vent apparent 
+                #on suppose que seul Vdir est impacté 
+                [x,y]=map.gpsToXY(A,B)                          #on génère les x,y de A p/r à B
+                Rv=math.atan2(x, y)*180/math.pi            #cap de A à B
+
+                VAdir=Vdir-Rv
+                if(VAdir<-180):
+                    VAdir+=360
+                if(VAdir>180):
+                    VAdir-=360
+                #vitesse bateau surface :
+                Vsurface=g(Vspd, VAdir)
+                
+                if(Vsurface<=0):
+                    t=1000+2*temps
+                else:
+                    t=(distanceAB/1852)/Vsurface
+
+                uv=self.uv(a[0], a[1],int(temps))
+                #energie
+                [conso, prod]=e(Vspd, uv) #en W
+
+                energie+=prod-conso
+                batterie+=prod-conso
+                
+                if(batterie>batterieTot):
+                    batterie=batterieTot
+                if(batterie<0):
+                    batterie=0
+                    resultat=abs(2*resultat)+1000
+                    t=1000
+                if(batterie/batterieTot<0.1):
+                    t*=3
+
+                temps+=t
+                
+                a=b
+
+                
+                resultat+=(prod*(1-batterie/batterieTot)+conso**3/(1+batterie/batterieTot)+1)*t
+
+            if(getInfo):
+                return [batterie/batterieTot, temps]
+            else:
+                self.generation[self.nbwaypoints, k]=resultat
             
     def choixCellules(self, k:int, m:int)->list:
         """choisi les numéros des k cellules à garder 
@@ -431,6 +482,7 @@ class Ga :
             for i in range(1,len(T)):
                 T[i]+=T[i-1]
             T[0]=0
+            
             #T devient une liste croisante entre 0 et 1-T[-1] 
             retour=[]
             for i in range(k):
@@ -439,6 +491,7 @@ class Ga :
                 while T[l]<r: #vérifier l'inégalité
                     l+=1
                 retour.append(l-1)
+         
             return retour
             
         elif(m==3):
@@ -507,8 +560,8 @@ class Ga :
         
         elif(m==2):
             ##mutation
-            pm=0.05
-            coef=0.01 #coef de mutation
+            pm=0.1
+            coef=1852/1000 #coef de mutation
             for j in range(self.nbCellules):
                 for i in range(self.nbwaypoints):
                     if(pm>random.random()):
@@ -520,14 +573,6 @@ class Ga :
                         elif(self.generation[i,j]<-self.largeurRoute):
                             self.generation[i,j]=-self.largeurRoute
             
-        #elif(m==3):
-        ## on copie les première cellules cela permet de mieux suivre l'évolution
-        #    for j in range(self.nbCellules):   #on complète l'algo
-        #        for i in range(self.nbwaypoints):   
-        #            if(j not in c):
-        #                l=random.choices([i for i in range(self.nbCellules)],k=1)
-        #                self.generation[i,j]=self.generation[i,l[0]]
-        #        self.fctCout(j)
 
     def resultat(self, gps=True):
         element = lambda T: T[0]
@@ -546,85 +591,48 @@ class Ga :
         return r
     
     def plot(self, show:bool=True):
-        ###resultat
-        r=self.R1ToR0List(self.resultat())
-        rx=[self.C[0]]+[r[i][0] for i in range(self.nbwaypoints)]
-        ry=[self.C[1]]+[r[i][1] for i in range(self.nbwaypoints)]
-        
-        plt.subplot(121)
-        plt.plot(rx, ry, "-*r") #chemin
-        plt.plot([self.C[0], self.Bm[0]],[self.C[1], self.Bm[1]], "m") #route direct reel
-        plt.plot([self.A[0], self.Bm[0]],[self.A[1], self.Bm[1]], "b")  #centre de la route 
-        plt.plot(self.C[0], self.C[1], "dm")    #pts de départ
-        
-        for i in range(self.nbwaypoints):
-            d1=self.R1ToR0(self.largeurRoute, i)
-            d2=self.R1ToR0(-self.largeurRoute, i)
-            plt.plot([d1[0], d2[0]], [d1[1], d2[1]], 'y')
-        
-        d=self.R1ToR0List([0 for i in range(self.nbwaypoints)])
-        dx=[d[i][0] for i in range(self.nbwaypoints)]
-        dy=[d[i][1] for i in range(self.nbwaypoints)]
-        plt.plot(dx,dy,"<y")    #projection des waypoints
-        plt.plot([self.B[0][0], self.B[1][0]], [self.B[0][1], self.B[1][1]], "m")   #porte de sortie
-        
-        d1=self.R1ToR0(self.largeurRoute, 0)
-        d2=self.R1ToR0(self.largeurRoute, self.nbwaypoints-2)
-        d3=self.R1ToR0(-self.largeurRoute, 0)
-        d4=self.R1ToR0(-self.largeurRoute, self.nbwaypoints-2)
-        plt.plot([d1[0], d2[0]], [d1[1], d2[1]], "g")    #largeur route
-        plt.plot([d3[0], d4[0]], [d3[1], d4[1]], "g")    #largeur route
-        plt.title("Resultat routage pour "+ str(self.nbwaypoints)+" waypoints")
-        plt.xlabel("y")
-        plt.ylabel("x")
-        plt.show()
-        
+        plt.figure(1)
         plt.subplot(211)
-        plt.plot([i for i in range(self.nbwaypoints+1)], [abs(self.C[0]-self.A[0])]+self.resultat(), "-ob")
-        plt.title("distance par rapport à la route direct")
-        plt.xlabel("i : indice de waypoints")
-        plt.ylabel("y (distance à la route)")
-        
-        w=self.Bm
-        p=self.C
-        cap=math.atan2(w[0]-p[0], w[1]-p[1])*180/math.pi #a vérifier
-        [i,j]=self.map.ref0Tomap(p[0],p[1])
-        Vreel=self.map.vent(i,j) #vent reel
-        dist=math.sqrt((w[0]-p[0])**2+(w[1]-p[1])**2)
-                
-        #vent apparent pour le moment sans prendre en compte la vitesse du bateau
-        if(Vreel[1]-cap>180): #vérifier
-            Vapp=[Vreel[0], 360-Vreel[1]-cap]
-        elif(Vreel[1]-cap<-180):
-            Vapp=[Vreel[0], Vreel[1]-cap+360]
-        else:
-            Vapp=[Vreel[0], Vreel[1]-cap]
-                
-        Vbateau=g(Vapp[0], Vapp[1])
-        if(Vbateau<=0):
-            cout="inf"
-        else:
-            cout=str(int(dist/Vbateau*10)/10)
-        print("###############")
-        print("cap ", cap)
-        print("Vapp", Vapp)
-        print("Vventreel :",Vreel)
-        print("Vbateau", Vbateau)
-        
-        
-        plt.subplot(212)
-        plt.plot([i for i in range(len(self.BestCout))], self.BestCout, "r")
-        plt.plot([i for i in range(len(self.meanCout))], self.meanCout, "b")
-        plt.title("évolution du cout -> cout direct :" )#+ str(cout))#str(int(math.sqrt(math.pow(self.C[0]-self.Bm[0],2)+math.pow(self.C[1]-self.Bm[1],2))*100)/100))
-        plt.legend(("best "+str(int(self.BestCout[-1]*10)/10),"mean "+str(int(self.meanCout[-1]*10)/10)))
+        #cout en m (optimisation distance)
+        plt.plot([i for i in range(len(self.BestCout))], [e for e in self.BestCout], "r")
+        plt.plot([i for i in range(len(self.meanCout))], [e for e in self.meanCout], "b")
+
+        plt.title("évolution du cout")
+        plt.legend(("best", "mean"))
         plt.xlabel("générations")
         plt.ylabel("cout")
+        plt.ylim(min(self.BestCout), max(self.BestCout))
+        
+        plt.subplot(212)
+        plt.plot([i for i in range(len(self.BestCout))], [e for e in self.BestCout], "r")
+        plt.plot([i for i in range(len(self.meanCout))], [e for e in self.meanCout], "b")
+
+        plt.title("évolution du cout" )
+        plt.legend(("best", "mean"))
+        plt.xlabel("générations")
+        plt.ylabel("cout")
+        
+
+        if(self.methodeCout==2):
+            plt.figure(2)
+            plt.subplot(211)
+            plt.plot([i for i in range(len(self.batterieBestCout))],self.batterieBestCout)
+            plt.xlabel("Générations")
+            plt.ylabel("% batterie")
+            plt.title("%  batterie restante de la meilleur cellule de chaque génération")
+            plt.subplot(212)
+            
+            plt.plot([i for i in range(len(self.tempsBestCout))],self.tempsBestCout)
+            plt.xlabel("Générations")
+            plt.ylabel("cout (temps)")
+            plt.title("cout en temps de la meilleur cellule de chaque génération")
+            plt.subplot(212)
         if(show):
             plt.show()
-        plt.plot([i for i in range(len(self.BestCout))], self.BestCout, "r")
-        plt.show()
+            
     
-    def save(self):
+    def save(self, nomFichier:str="map"):
+        print("saving")
         #self.A=map.sexagesimauxToDecimaux2(self.A)
         #self.Bm=map.sexagesimauxToDecimaux2(self.Bm)
         #self.B[0]=map.sexagesimauxToDecimaux2(self.B[0])
@@ -652,35 +660,27 @@ class Ga :
             folium.PolyLine([D1,D2], color="yellow", weight=2.5, opacity=1).add_to(carte)
         
         #resultat 
-        folium.PolyLine(self.resultat(True), color="red", weight=2.5, opacity=1).add_to(carte)
-        
-        #carte gen :
-        A=[self.map.zero[0], self.map.A[1]]
-        B=[self.map.A[0], self.map.zero[1]]
-        folium.PolyLine([self.map.zero, A, self.map.A, B, self.map.zero], color="black", weight=2.5, opacity=1).add_to(carte)
-        #
-        carte.save(outfile='map.html')
+        folium.PolyLine([self.C]+self.resultat(True), color="red", weight=2.5, opacity=1).add_to(carte)
+
+        carte.save(outfile=nomFichier+'.html')
+        print("finish")
+
 if __name__ == "__main__":
-    A=[[0,0,0,"N"],[0,0,0,"E"]]
-    B=[[[4,1,0,"N"],[4,5,0,"E"]],[[4,0,0,"N"],[4,0,0,"E"]]]
-    Bm=[[0,0,0,"N"],[1,0,0,"E"]]
-    Bm2=[[0,0,0.0,'N'], [0, 59, 59.8629, 'E']]
-    C=[[0,0,0,"N"],[0,1,0,"E"]]
-    to=time.time()
-    carte=map.Map3(A,B[1],1852,1)  #pas = 1852=1milles nautique
-    ga=Ga(C,A,B,10*1852,carte)
-    print("nbW",ga.nbwaypoints )
-    #print(map.decimauxToSexagesimaux2(ga.R1ToR0(1852,2,True)))
-    #print(ga.listDistance[2]/1852)
-    #print(map.decimauxToSexagesimaux2(map.xyToGPS(A,[1852, 4.625*1852])))
-    #print(map.xyToGPS(A,map.gpsToXY(A,Bm), False))
-    print(map.decimauxToSexagesimaux2(ga.Bm))
+    A=[[0,0,0,"N"],[10,0,0,"W"]]
+    porte=[[[1,1,0,"N"],[5,0,0,"E"]],[[1,1,0,"S"],[5,0,0,"E"]]]
+
+    stGa=StopGA(None,None)
+    ga=Ga(A, A, porte, 50*1852, stGa)
+    ga.setRun(20, 20, 3, 1, 2)
     
-    ga.gen(1, 1, 3,1)   #pour le moment 3 1 best ou 3 3
-    print("gen in", time.time()-to, "s")
-    #for i in range():
-    print(ga.nbwaypoints)
-    print(map.decimauxToSexagesimaux2(ga.R1ToR0(ga.generation[ga.nbwaypoints-1,0],ga.nbwaypoints-1,True)))
+    stGa.ga=ga
+
+    stGa.start()
+    ga.start()
+    
+    ga.join()
+    stGa.join()
+
     ga.save()
-    
-    
+    ga.plot()
+
